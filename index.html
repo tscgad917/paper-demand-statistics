@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -138,6 +137,8 @@
       background: #f8f8f8;
       font-size: 14px;
       display: none;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .status.show {
@@ -777,6 +778,49 @@
 
 
     // ============================================
+    // 建立詳細錯誤訊息
+    // ============================================
+
+    function getSupabaseErrorMessage(error) {
+
+      if (!error) {
+        return "未知錯誤";
+      }
+
+
+      let message =
+        "資料送出失敗\n\n";
+
+
+      if (error.code) {
+        message +=
+          `錯誤代碼：${error.code}\n`;
+      }
+
+
+      if (error.message) {
+        message +=
+          `錯誤訊息：${error.message}\n`;
+      }
+
+
+      if (error.details) {
+        message +=
+          `詳細資料：${error.details}\n`;
+      }
+
+
+      if (error.hint) {
+        message +=
+          `提示：${error.hint}\n`;
+      }
+
+
+      return message.trim();
+    }
+
+
+    // ============================================
     // 送出申請
     // ============================================
 
@@ -904,46 +948,59 @@ B5紙：${b5}組（${b5 * 5}包）
 
       try {
 
-       const {
-  data,
-  error
-} = await db
-  .from("quarterly_requests")
-  .insert({
-    quarter_id:
-      currentQuarter.id,
+        const {
+          data,
+          error
+        } = await db
+          .from("quarterly_requests")
+          .insert({
+            quarter_id:
+              currentQuarter.id,
 
-    unit_id:
-      unitId,
+            unit_id:
+              unitId,
 
-    applicant_name:
-      applicant,
+            applicant_name:
+              applicant,
 
-    report_paper_boxes:
-      reportPaper,
+            report_paper_boxes:
+              reportPaper,
 
-    a4_sets:
-      a4,
+            a4_sets:
+              a4,
 
-    a3_sets:
-      a3,
+            a3_sets:
+              a3,
 
-    b4_sets:
-      b4,
+            b4_sets:
+              b4,
 
-    b5_sets:
-      b5
-  });
-
-console.log("INSERT 回傳 data：", data);
-console.log("INSERT 回傳 error：", error);
+            b5_sets:
+              b5
+          });
 
 
-if (error) {
+        // 診斷用紀錄
+        console.log(
+          "INSERT 回傳 data：",
+          data
+        );
 
-          // UNIQUE constraint
+        console.log(
+          "INSERT 回傳 error：",
+          error
+        );
+
+
+        if (error) {
+
+          // 只有「本季度＋單位」的唯一限制才顯示重複填寫
           if (
-            error.code === "23505"
+            error.code === "23505" &&
+            error.message &&
+            error.message.includes(
+              "quarterly_requests_quarter_unit_unique"
+            )
           ) {
 
             throw new Error(
@@ -952,9 +1009,16 @@ if (error) {
           }
 
 
-          throw error;
+          // 其他錯誤直接顯示完整 Supabase 錯誤
+          throw new Error(
+            getSupabaseErrorMessage(error)
+          );
         }
 
+
+        // ========================================
+        // INSERT 成功
+        // ========================================
 
         alert(
           `申請已成功送出！
@@ -992,6 +1056,7 @@ B5紙：${b5}組（${b5 * 5}包）`
         );
 
 
+        // 失敗後恢復送出按鈕
         submitButton.disabled = false;
       }
 
@@ -1081,4 +1146,3 @@ B5紙：${b5}組（${b5 * 5}包）`
 
 </body>
 </html>
-```
