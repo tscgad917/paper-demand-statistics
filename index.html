@@ -1,9 +1,13 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>紙張需求統計</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * {
@@ -67,6 +71,12 @@
       background: #fff;
     }
 
+    input:disabled,
+    select:disabled {
+      background: #f2f2f2;
+      color: #777;
+    }
+
     .paper-row {
       border: 1px solid #ddd;
       border-radius: 8px;
@@ -108,12 +118,30 @@
       opacity: 0.9;
     }
 
+    .submit-button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
     .info {
       padding: 12px;
       margin-bottom: 20px;
       border-radius: 6px;
       background: #f0f0f0;
       font-size: 14px;
+    }
+
+    .status {
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      background: #f8f8f8;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
     }
 
     .hidden {
@@ -129,45 +157,33 @@
 
       <h1>紙張需求統計</h1>
 
-      <div class="subtitle">
-        115年第4季
+      <div class="subtitle" id="quarterName">
+        載入中……
       </div>
 
-      <div class="info">
-        填寫期限：2026年10月1日
+      <div class="info" id="deadlineInfo">
+        填寫期限：載入中……
       </div>
+
+      <div class="status" id="statusMessage"></div>
 
       <div class="form-group">
         <label for="unit">單位</label>
-        <select id="unit">
-          <option value="">請選擇單位</option>
-          <option>營業部</option>
-          <option>水碓分社</option>
-          <option>竹圍分社</option>
-          <option>英專分社</option>
-          <option>義山分社</option>
-          <option>三芝分社</option>
-          <option>八里分社</option>
-          <option>成州分社</option>
-          <option>五股分社</option>
-          <option>萬金分社</option>
-          <option>新莊分社</option>
-          <option>泰山分社</option>
-          <option>林口分社</option>
-          <option>板橋分社</option>
-          <option>蘆洲分社</option>
-          <option>三重分社</option>
-          <option>總務課</option>
-          <option>69號辦公室</option>
+
+        <select id="unit" disabled>
+          <option value="">載入中……</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="applicant">填寫人姓名</label>
+
         <input
           type="text"
           id="applicant"
           placeholder="請輸入姓名"
+          maxlength="50"
+          disabled
         >
       </div>
 
@@ -176,70 +192,108 @@
         <div class="paper-row">
           <div class="paper-name">報表紙</div>
           <div class="paper-unit">單位：箱</div>
+
           <input
             type="number"
             id="reportPaper"
             min="0"
             step="1"
             value="0"
+            disabled
           >
+
+          <div class="reference" id="reportPaperReference">
+            上季參考：尚無資料
+          </div>
         </div>
+
 
         <div class="paper-row">
           <div class="paper-name">A4紙</div>
           <div class="paper-unit">單位：組（1組＝5包）</div>
+
           <input
             type="number"
             id="a4"
             min="0"
             step="1"
             value="0"
+            disabled
           >
+
+          <div class="reference" id="a4Reference">
+            上季參考：尚無資料
+          </div>
+
           <div class="reference" id="a4Display">
             目前：0組，共0包
           </div>
         </div>
 
+
         <div class="paper-row">
           <div class="paper-name">A3紙</div>
           <div class="paper-unit">單位：組（1組＝5包）</div>
+
           <input
             type="number"
             id="a3"
             min="0"
             step="1"
             value="0"
+            disabled
           >
+
+          <div class="reference" id="a3Reference">
+            上季參考：尚無資料
+          </div>
+
           <div class="reference" id="a3Display">
             目前：0組，共0包
           </div>
         </div>
 
+
         <div class="paper-row">
           <div class="paper-name">B4紙</div>
           <div class="paper-unit">單位：組（1組＝5包）</div>
+
           <input
             type="number"
             id="b4"
             min="0"
             step="1"
             value="0"
+            disabled
           >
+
+          <div class="reference" id="b4Reference">
+            上季參考：尚無資料
+          </div>
+
           <div class="reference" id="b4Display">
             目前：0組，共0包
           </div>
         </div>
 
+
         <div class="paper-row">
           <div class="paper-name">B5紙</div>
           <div class="paper-unit">單位：組（1組＝5包）</div>
+
           <input
             type="number"
             id="b5"
             min="0"
             step="1"
             value="0"
+            disabled
           >
+
+          <div class="reference" id="b5Reference">
+            上季參考：尚無資料
+          </div>
+
           <div class="reference" id="b5Display">
             目前：0組，共0包
           </div>
@@ -247,41 +301,780 @@
 
       </div>
 
-      <button class="submit-button">
+      <button
+        class="submit-button"
+        id="submitButton"
+        disabled
+      >
         送出
       </button>
 
     </div>
   </div>
 
-  <script>
-    function updatePackDisplay(inputId, displayId) {
-      const input = document.getElementById(inputId);
-      const display = document.getElementById(displayId);
 
-      const sets = Number(input.value) || 0;
-      const packs = sets * 5;
+  <script>
+
+    // ============================================
+    // Supabase 設定
+    // ============================================
+
+    const SUPABASE_URL =
+      "https://kkjtllzynmsbydlzlfxx.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_VjHbEO310etdJFGwAyOEXw_NeQW54s_";
+
+    const { createClient } =
+      supabase;
+
+    const db = createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+    // ============================================
+    // 系統狀態
+    // ============================================
+
+    let currentQuarter = null;
+    let units = [];
+    let submitting = false;
+
+
+    // ============================================
+    // DOM
+    // ============================================
+
+    const quarterName =
+      document.getElementById("quarterName");
+
+    const deadlineInfo =
+      document.getElementById("deadlineInfo");
+
+    const statusMessage =
+      document.getElementById("statusMessage");
+
+    const unitSelect =
+      document.getElementById("unit");
+
+    const applicantInput =
+      document.getElementById("applicant");
+
+    const submitButton =
+      document.getElementById("submitButton");
+
+
+    // ============================================
+    // 顯示訊息
+    // ============================================
+
+    function showStatus(message) {
+
+      statusMessage.textContent = message;
+
+      statusMessage.classList.add("show");
+    }
+
+
+    function hideStatus() {
+
+      statusMessage.textContent = "";
+
+      statusMessage.classList.remove("show");
+    }
+
+
+    // ============================================
+    // 日期格式
+    // ============================================
+
+    function formatDate(dateString) {
+
+      const parts =
+        dateString.split("-");
+
+      if (parts.length !== 3) {
+        return dateString;
+      }
+
+      return `${parts[0]}年${parts[1]}月${parts[2]}日`;
+    }
+
+
+    // ============================================
+    // 判斷是否仍可填寫
+    // ============================================
+
+    function isQuarterOpen() {
+
+      if (!currentQuarter) {
+        return false;
+      }
+
+      if (!currentQuarter.is_active) {
+        return false;
+      }
+
+      const today =
+        new Date();
+
+      const todayString =
+        today.toISOString().slice(0, 10);
+
+      return todayString <= currentQuarter.deadline;
+    }
+
+
+    // ============================================
+    // 啟用／停用表單
+    // ============================================
+
+    function setFormEnabled(enabled) {
+
+      unitSelect.disabled = !enabled;
+
+      applicantInput.disabled = !enabled;
+
+      document
+        .querySelectorAll(".paper-row input")
+        .forEach(input => {
+          input.disabled = !enabled;
+        });
+
+      submitButton.disabled = !enabled;
+    }
+
+
+    // ============================================
+    // 載入目前季度
+    // ============================================
+
+    async function loadQuarter() {
+
+      const {
+        data,
+        error
+      } = await db
+        .from("quarters")
+        .select(
+          "id, period_start, quarter_name, deadline, is_active"
+        )
+        .eq("is_active", true)
+        .order("period_start", {
+          ascending: false
+        })
+        .limit(1)
+        .maybeSingle();
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      if (!data) {
+
+        quarterName.textContent =
+          "目前沒有開放的填寫期間";
+
+        deadlineInfo.textContent =
+          "目前無法填寫";
+
+        setFormEnabled(false);
+
+        return false;
+      }
+
+
+      currentQuarter = data;
+
+
+      quarterName.textContent =
+        data.quarter_name;
+
+      deadlineInfo.textContent =
+        `填寫期限：${formatDate(data.deadline)}`;
+
+
+      if (!isQuarterOpen()) {
+
+        deadlineInfo.textContent +=
+          "（目前已截止）";
+
+        setFormEnabled(false);
+
+        return false;
+      }
+
+
+      return true;
+    }
+
+
+    // ============================================
+    // 載入單位
+    // ============================================
+
+    async function loadUnits() {
+
+      const {
+        data,
+        error
+      } = await db
+        .from("units")
+        .select("id, name, sort_order")
+        .order("sort_order", {
+          ascending: true
+        });
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      units = data || [];
+
+
+      unitSelect.innerHTML =
+        '<option value="">請選擇單位</option>';
+
+
+      units.forEach(unit => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          unit.id;
+
+        option.textContent =
+          unit.name;
+
+        unitSelect.appendChild(option);
+      });
+    }
+
+
+    // ============================================
+    // 取得上一季參考數量
+    // ============================================
+
+    async function loadPreviousReference(unitId) {
+
+      clearReferences();
+
+
+      if (!unitId || !currentQuarter) {
+        return;
+      }
+
+
+      const {
+        data,
+        error
+      } = await db.rpc(
+        "get_previous_quarter_reference",
+        {
+          p_quarter_id:
+            currentQuarter.id,
+
+          p_unit_id:
+            Number(unitId)
+        }
+      );
+
+
+      if (error) {
+
+        console.error(
+          "取得上一季參考數量失敗：",
+          error
+        );
+
+        return;
+      }
+
+
+      if (!data || data.length === 0) {
+
+        return;
+      }
+
+
+      const reference =
+        data[0];
+
+
+      document.getElementById(
+        "reportPaperReference"
+      ).textContent =
+        `上季參考：${reference.report_paper_boxes}箱`;
+
+
+      document.getElementById(
+        "a4Reference"
+      ).textContent =
+        `上季參考：${reference.a4_sets}組（${reference.a4_sets * 5}包）`;
+
+
+      document.getElementById(
+        "a3Reference"
+      ).textContent =
+        `上季參考：${reference.a3_sets}組（${reference.a3_sets * 5}包）`;
+
+
+      document.getElementById(
+        "b4Reference"
+      ).textContent =
+        `上季參考：${reference.b4_sets}組（${reference.b4_sets * 5}包）`;
+
+
+      document.getElementById(
+        "b5Reference"
+      ).textContent =
+        `上季參考：${reference.b5_sets}組（${reference.b5_sets * 5}包）`;
+    }
+
+
+    function clearReferences() {
+
+      document.getElementById(
+        "reportPaperReference"
+      ).textContent =
+        "上季參考：尚無資料";
+
+
+      document.getElementById(
+        "a4Reference"
+      ).textContent =
+        "上季參考：尚無資料";
+
+
+      document.getElementById(
+        "a3Reference"
+      ).textContent =
+        "上季參考：尚無資料";
+
+
+      document.getElementById(
+        "b4Reference"
+      ).textContent =
+        "上季參考：尚無資料";
+
+
+      document.getElementById(
+        "b5Reference"
+      ).textContent =
+        "上季參考：尚無資料";
+    }
+
+
+    // ============================================
+    // 組／包數量顯示
+    // ============================================
+
+    function updatePackDisplay(
+      inputId,
+      displayId
+    ) {
+
+      const input =
+        document.getElementById(inputId);
+
+      const display =
+        document.getElementById(displayId);
+
+
+      const sets =
+        Number(input.value) || 0;
+
+      const packs =
+        sets * 5;
+
 
       display.textContent =
         `目前：${sets}組，共${packs}包`;
     }
 
-    document.getElementById("a4").addEventListener("input", function () {
-      updatePackDisplay("a4", "a4Display");
-    });
 
-    document.getElementById("a3").addEventListener("input", function () {
-      updatePackDisplay("a3", "a3Display");
-    });
+    document
+      .getElementById("a4")
+      .addEventListener(
+        "input",
+        function () {
+          updatePackDisplay(
+            "a4",
+            "a4Display"
+          );
+        }
+      );
 
-    document.getElementById("b4").addEventListener("input", function () {
-      updatePackDisplay("b4", "b4Display");
-    });
 
-    document.getElementById("b5").addEventListener("input", function () {
-      updatePackDisplay("b5", "b5Display");
-    });
+    document
+      .getElementById("a3")
+      .addEventListener(
+        "input",
+        function () {
+          updatePackDisplay(
+            "a3",
+            "a3Display"
+          );
+        }
+      );
+
+
+    document
+      .getElementById("b4")
+      .addEventListener(
+        "input",
+        function () {
+          updatePackDisplay(
+            "b4",
+            "b4Display"
+          );
+        }
+      );
+
+
+    document
+      .getElementById("b5")
+      .addEventListener(
+        "input",
+        function () {
+          updatePackDisplay(
+            "b5",
+            "b5Display"
+          );
+        }
+      );
+
+
+    // ============================================
+    // 取得數量
+    // ============================================
+
+    function getNumber(inputId) {
+
+      const value =
+        Number(
+          document.getElementById(inputId).value
+        );
+
+
+      if (
+        !Number.isInteger(value) ||
+        value < 0
+      ) {
+        return null;
+      }
+
+
+      return value;
+    }
+
+
+    // ============================================
+    // 送出申請
+    // ============================================
+
+    async function submitRequest() {
+
+      if (submitting) {
+        return;
+      }
+
+
+      hideStatus();
+
+
+      // 再次確認填寫期間
+      if (!isQuarterOpen()) {
+
+        showStatus(
+          "目前已超過填寫期限，無法送出。"
+        );
+
+        setFormEnabled(false);
+
+        return;
+      }
+
+
+      const unitId =
+        Number(unitSelect.value);
+
+
+      const applicant =
+        applicantInput.value.trim();
+
+
+      if (!unitId) {
+
+        alert("請選擇單位。");
+
+        return;
+      }
+
+
+      if (!applicant) {
+
+        alert("請輸入填寫人姓名。");
+
+        applicantInput.focus();
+
+        return;
+      }
+
+
+      const reportPaper =
+        getNumber("reportPaper");
+
+      const a4 =
+        getNumber("a4");
+
+      const a3 =
+        getNumber("a3");
+
+      const b4 =
+        getNumber("b4");
+
+      const b5 =
+        getNumber("b5");
+
+
+      if (
+        reportPaper === null ||
+        a4 === null ||
+        a3 === null ||
+        b4 === null ||
+        b5 === null
+      ) {
+
+        alert(
+          "紙張數量請輸入0以上的整數。"
+        );
+
+        return;
+      }
+
+
+      const selectedUnit =
+        units.find(
+          unit => unit.id === unitId
+        );
+
+
+      const unitName =
+        selectedUnit
+          ? selectedUnit.name
+          : "";
+
+
+      const confirmation =
+
+`請確認本次申請資料：
+
+單位：${unitName}
+填寫人：${applicant}
+
+報表紙：${reportPaper}箱
+A4紙：${a4}組（${a4 * 5}包）
+A3紙：${a3}組（${a3 * 5}包）
+B4紙：${b4}組（${b4 * 5}包）
+B5紙：${b5}組（${b5 * 5}包）
+
+確定要送出嗎？`;
+
+
+      if (!confirm(confirmation)) {
+        return;
+      }
+
+
+      submitting = true;
+
+      submitButton.disabled = true;
+
+      submitButton.textContent =
+        "送出中……";
+
+
+      try {
+
+        const {
+          error
+        } = await db
+          .from("quarterly_requests")
+          .insert({
+            quarter_id:
+              currentQuarter.id,
+
+            unit_id:
+              unitId,
+
+            applicant_name:
+              applicant,
+
+            report_paper_boxes:
+              reportPaper,
+
+            a4_sets:
+              a4,
+
+            a3_sets:
+              a3,
+
+            b4_sets:
+              b4,
+
+            b5_sets:
+              b5
+          });
+
+
+        if (error) {
+
+          // UNIQUE constraint
+          if (
+            error.code === "23505"
+          ) {
+
+            throw new Error(
+              "此單位本季度已經送出申請，不能重複填寫。"
+            );
+          }
+
+
+          throw error;
+        }
+
+
+        alert(
+          `申請已成功送出！
+
+單位：${unitName}
+填寫人：${applicant}
+
+報表紙：${reportPaper}箱
+A4紙：${a4}組（${a4 * 5}包）
+A3紙：${a3}組（${a3 * 5}包）
+B4紙：${b4}組（${b4 * 5}包）
+B5紙：${b5}組（${b5 * 5}包）`
+        );
+
+
+        // 送出成功後鎖定表單
+        setFormEnabled(false);
+
+        showStatus(
+          "本季度申請已完成送出。"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "送出申請失敗：",
+          error
+        );
+
+
+        alert(
+          error.message ||
+          "送出失敗，請稍後再試。"
+        );
+
+
+        submitButton.disabled = false;
+      }
+
+
+      submitting = false;
+
+      submitButton.textContent =
+        "送出";
+    }
+
+
+    submitButton.addEventListener(
+      "click",
+      submitRequest
+    );
+
+
+    // ============================================
+    // 選擇單位
+    // ============================================
+
+    unitSelect.addEventListener(
+      "change",
+      async function () {
+
+        hideStatus();
+
+        await loadPreviousReference(
+          unitSelect.value
+        );
+      }
+    );
+
+
+    // ============================================
+    // 初始化
+    // ============================================
+
+    async function init() {
+
+      try {
+
+        const quarterOpen =
+          await loadQuarter();
+
+
+        if (!quarterOpen) {
+          return;
+        }
+
+
+        await loadUnits();
+
+
+        setFormEnabled(true);
+
+
+      } catch (error) {
+
+        console.error(
+          "系統初始化失敗：",
+          error
+        );
+
+
+        quarterName.textContent =
+          "系統載入失敗";
+
+
+        deadlineInfo.textContent =
+          "請稍後重新整理頁面";
+
+
+        showStatus(
+          "無法連線至資料庫，請稍後再試。"
+        );
+
+
+        setFormEnabled(false);
+      }
+    }
+
+
+    init();
+
   </script>
 
 </body>
 </html>
+```
