@@ -1,607 +1,1411 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>紙張需求統計</title>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
+
     * {
       box-sizing: border-box;
     }
 
+
     body {
+
       margin: 0;
+      padding: 0;
+
       font-family:
         "Noto Sans TC",
         "Microsoft JhengHei",
         Arial,
         sans-serif;
-      background: #f5f7fa;
+
+      background: #f3f6f3;
+
       color: #333;
     }
 
+
+    /* =====================================================
+       Header
+       ===================================================== */
+
+    .top-header {
+
+      background: #14532d;
+
+      color: white;
+
+      padding: 18px 20px;
+
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+
+    .top-header-inner {
+
+      max-width: 760px;
+
+      margin: 0 auto;
+    }
+
+
+    .brand-name {
+
+      font-size: 15px;
+
+      opacity: 0.92;
+
+      letter-spacing: 0.5px;
+
+      margin-bottom: 3px;
+    }
+
+
+    .brand-title {
+
+      font-size: 20px;
+
+      font-weight: 700;
+
+      letter-spacing: 1px;
+    }
+
+
+    /* =====================================================
+       Main
+       ===================================================== */
+
     .container {
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 0 20px;
+
+      max-width: 760px;
+
+      margin: 0 auto;
+
+      padding: 30px 20px 48px;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    }
 
-    h1 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      text-align: center;
-      font-size: 28px;
-    }
+    .page-heading {
 
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
-    }
-
-    .form-group {
       margin-bottom: 22px;
     }
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
+
+    .page-heading h1 {
+
+      margin: 0 0 6px;
+
+      color: #14532d;
+
+      font-size: 26px;
+
+      font-weight: 700;
+
+      letter-spacing: 0.5px;
     }
 
-    input,
-    select {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-    }
 
-    input:disabled,
-    select:disabled {
-      background: #f2f2f2;
-      color: #777;
-    }
+    .page-heading p {
 
-    .paper-row {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 12px;
-      background: #fafafa;
-    }
+      margin: 0;
 
-    .paper-name {
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+      color: #666;
 
-    .paper-unit {
-      color: #777;
       font-size: 14px;
-      margin-bottom: 8px;
+
+      line-height: 1.7;
     }
 
-    .reference {
-      margin-top: 6px;
-      color: #777;
-      font-size: 14px;
-    }
 
-    .submit-button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #333;
-      color: #fff;
-      font-size: 17px;
-      cursor: pointer;
-    }
-
-    .submit-button:hover {
-      opacity: 0.9;
-    }
-
-    .submit-button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-
-    .info {
-      padding: 12px;
-      margin-bottom: 20px;
-      border-radius: 6px;
-      background: #f0f0f0;
-      font-size: 14px;
-    }
+    /* =====================================================
+       Status
+       ===================================================== */
 
     .status {
-      padding: 12px;
+
+      padding: 14px 16px;
+
       margin-bottom: 20px;
-      border-radius: 6px;
-      background: #f8f8f8;
+
+      border-radius: 9px;
+
+      border: 1px solid #dfe6e1;
+
+      text-align: center;
+
+      line-height: 1.7;
+
+      background: #f8faf8;
+
+      color: #666;
+
       font-size: 14px;
-      display: none;
+
       white-space: pre-wrap;
+
       word-break: break-word;
     }
 
-    .status.show {
-      display: block;
+
+    .status.open {
+
+      background: #edf6ef;
+
+      border-color: #d4e8d8;
+
+      color: #315b3c;
     }
 
-    .hidden {
-      display: none;
+
+    .status.closed {
+
+      background: #fbf0ef;
+
+      border-color: #eed6d3;
+
+      color: #8a4540;
     }
+
+
+    /* =====================================================
+       Form Card
+       ===================================================== */
+
+    .form-card {
+
+      background: white;
+
+      border: 1px solid #e2e8e3;
+
+      border-radius: 12px;
+
+      box-shadow:
+        0 2px 8px rgba(20, 83, 45, 0.05);
+
+      padding: 24px;
+    }
+
+
+    .section-title {
+
+      margin: 0 0 18px;
+
+      color: #14532d;
+
+      font-size: 18px;
+
+      font-weight: 700;
+    }
+
+
+    /* =====================================================
+       Form Fields
+       ===================================================== */
+
+    .field {
+
+      margin-bottom: 20px;
+    }
+
+
+    .field label {
+
+      display: block;
+
+      margin-bottom: 7px;
+
+      color: #444;
+
+      font-size: 14px;
+
+      font-weight: 600;
+    }
+
+
+    select,
+    input {
+
+      width: 100%;
+
+      min-height: 44px;
+
+      padding: 9px 12px;
+
+      font-family: inherit;
+
+      font-size: 15px;
+
+      color: #333;
+
+      background: white;
+
+      border: 1px solid #cfd8d1;
+
+      border-radius: 7px;
+
+      outline: none;
+    }
+
+
+    select {
+
+      cursor: pointer;
+    }
+
+
+    select:focus,
+    input:focus {
+
+      border-color: #39835a;
+
+      box-shadow:
+        0 0 0 3px rgba(57, 131, 90, 0.10);
+    }
+
+
+    input::placeholder {
+
+      color: #aaa;
+    }
+
+
+    /* =====================================================
+       Paper Section
+       ===================================================== */
+
+    .paper-section {
+
+      margin-top: 26px;
+
+      padding-top: 22px;
+
+      border-top: 1px solid #e5eae6;
+    }
+
+
+    .paper-title {
+
+      margin: 0 0 5px;
+
+      color: #14532d;
+
+      font-size: 17px;
+
+      font-weight: 700;
+    }
+
+
+    .paper-description {
+
+      margin: 0 0 18px;
+
+      color: #777;
+
+      font-size: 13px;
+
+      line-height: 1.6;
+    }
+
+
+    /* =====================================================
+       Paper Item
+       ===================================================== */
+
+    .item {
+
+      padding: 15px 16px;
+
+      margin-bottom: 10px;
+
+      background: #f8faf8;
+
+      border: 1px solid #e1e8e2;
+
+      border-radius: 8px;
+    }
+
+
+    .item:last-child {
+
+      margin-bottom: 0;
+    }
+
+
+    .item-header {
+
+      display: flex;
+
+      align-items: baseline;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      margin-bottom: 8px;
+    }
+
+
+    .item-name {
+
+      color: #444;
+
+      font-size: 14px;
+
+      font-weight: 600;
+    }
+
+
+    .reference {
+
+      flex-shrink: 0;
+
+      color: #6b7c70;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+
+      text-align: right;
+    }
+
+
+    .reference strong {
+
+      color: #315b3c;
+
+      font-weight: 600;
+    }
+
+
+    .item input {
+
+      background: white;
+    }
+
+
+    /* =====================================================
+       Unit
+       ===================================================== */
+
+    .unit-text {
+
+      color: #777;
+
+      font-size: 12px;
+
+      margin-top: 6px;
+    }
+
+
+    /* =====================================================
+       Submit
+       ===================================================== */
+
+    .submit-area {
+
+      margin-top: 26px;
+
+      padding-top: 22px;
+
+      border-top: 1px solid #e5eae6;
+    }
+
+
+    button {
+
+      width: 100%;
+
+      min-height: 46px;
+
+      padding: 11px 16px;
+
+      font-family: inherit;
+
+      font-size: 16px;
+
+      font-weight: 600;
+
+      border: none;
+
+      border-radius: 7px;
+
+      cursor: pointer;
+
+      background: #14532d;
+
+      color: white;
+
+      transition:
+        background 0.15s ease,
+        opacity 0.15s ease;
+    }
+
+
+    button:hover {
+
+      background: #104325;
+    }
+
+
+    button:disabled {
+
+      background: #9ca9a0;
+
+      cursor: not-allowed;
+
+      opacity: 1;
+    }
+
+
+    .note {
+
+      margin-top: 14px;
+
+      padding: 12px 14px;
+
+      background: #f5f7f5;
+
+      border-radius: 7px;
+
+      color: #666;
+
+      font-size: 13px;
+
+      line-height: 1.7;
+    }
+
+
+    /* =====================================================
+       Disabled
+       ===================================================== */
+
+    #formArea.disabled {
+
+      opacity: 0.55;
+
+      pointer-events: none;
+    }
+
+
+    /* =====================================================
+       Mobile
+       ===================================================== */
+
+    @media (max-width: 600px) {
+
+      .top-header {
+
+        padding: 16px 18px;
+      }
+
+
+      .brand-title {
+
+        font-size: 18px;
+      }
+
+
+      .container {
+
+        padding:
+          24px 14px 40px;
+      }
+
+
+      .page-heading h1 {
+
+        font-size: 23px;
+      }
+
+
+      .form-card {
+
+        padding: 18px;
+      }
+
+
+      .item {
+
+        padding: 14px;
+      }
+
+
+      .item-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 3px;
+      }
+
+
+      .reference {
+
+        text-align: left;
+      }
+
+    }
+
   </style>
+
 </head>
+
 
 <body>
 
-  <div class="container">
-    <div class="card">
 
-      <h1>紙張需求統計</h1>
+  <!-- =====================================================
+       Header
+       ===================================================== -->
 
-      <div class="subtitle" id="quarterName">
-        載入中……
+  <header class="top-header">
+
+    <div class="top-header-inner">
+
+      <div class="brand-name">
+        淡水信用合作社
       </div>
 
-      <div class="info" id="deadlineInfo">
-        填寫期限：載入中……
+      <div class="brand-title">
+        紙張需求統計
       </div>
 
-      <div class="status" id="statusMessage"></div>
+    </div>
 
-      <div class="form-group">
-        <label for="unit">單位</label>
+  </header>
 
-        <select id="unit" disabled>
-          <option value="">載入中……</option>
+
+  <!-- =====================================================
+       Main
+       ===================================================== -->
+
+  <main class="container">
+
+
+    <div class="page-heading">
+
+      <h1>
+        紙張需求統計
+      </h1>
+
+      <p>
+        請依本單位下一季實際需求填寫各項紙張數量，確認內容無誤後再送出。
+      </p>
+
+    </div>
+
+
+    <!-- ===================================================
+         申請狀態
+         =================================================== -->
+
+    <div
+      id="status"
+      class="status"
+    >
+      正在確認本次申請期間……
+    </div>
+
+
+    <!-- ===================================================
+         表單
+         =================================================== -->
+
+    <div
+      id="formArea"
+      class="form-card"
+    >
+
+
+      <h2 class="section-title">
+        申請資料
+      </h2>
+
+
+      <!-- =================================================
+           基本資料
+           ================================================= -->
+
+      <div class="field">
+
+        <label for="unit">
+          申請單位
+        </label>
+
+        <select id="unit">
+
+          <option value="">
+            請選擇單位
+          </option>
+
         </select>
+
       </div>
 
-      <div class="form-group">
-        <label for="applicant">填寫人姓名</label>
+
+      <div class="field">
+
+        <label for="name">
+          填寫人
+        </label>
 
         <input
           type="text"
-          id="applicant"
+          id="name"
           placeholder="請輸入姓名"
           maxlength="50"
-          disabled
         >
+
       </div>
 
-      <div class="form-group">
 
-        <div class="paper-row">
-          <div class="paper-name">報表紙</div>
-          <div class="paper-unit">單位：箱</div>
+      <!-- =================================================
+           紙張需求
+           ================================================= -->
+
+      <div class="paper-section">
+
+        <h3 class="paper-title">
+          各項紙張需求
+        </h3>
+
+        <p class="paper-description">
+          請參考前一季使用量填寫下一季需求；A4、A3、B4、B5 以 5 包為 1 組。
+        </p>
+
+
+        <!-- 報表紙 -->
+
+        <div class="item">
+
+          <div class="item-header">
+
+            <div class="item-name">
+              報表紙
+            </div>
+
+            <div
+              class="reference"
+              id="reportReference"
+            >
+              前季參考：尚未選擇單位
+            </div>
+
+          </div>
 
           <input
             type="number"
             id="reportPaper"
             min="0"
             step="1"
-            value="0"
-            disabled
+            placeholder="請輸入箱數"
           >
 
-          <div class="reference" id="reportPaperReference">
-            上季參考：尚無資料
+          <div class="unit-text">
+            單位：箱
           </div>
+
         </div>
 
 
-        <div class="paper-row">
-          <div class="paper-name">A4紙</div>
-          <div class="paper-unit">單位：組（1組＝5包）</div>
+        <!-- A4 -->
+
+        <div class="item">
+
+          <div class="item-header">
+
+            <div class="item-name">
+              A4
+            </div>
+
+            <div
+              class="reference"
+              id="a4Reference"
+            >
+              前季參考：尚未選擇單位
+            </div>
+
+          </div>
 
           <input
             type="number"
             id="a4"
             min="0"
             step="1"
-            value="0"
-            disabled
+            placeholder="請輸入組數"
           >
 
-          <div class="reference" id="a4Reference">
-            上季參考：尚無資料
+          <div class="unit-text">
+            單位：組（1組＝5包）
           </div>
 
-          <div class="reference" id="a4Display">
-            目前：0組，共0包
-          </div>
         </div>
 
 
-        <div class="paper-row">
-          <div class="paper-name">A3紙</div>
-          <div class="paper-unit">單位：組（1組＝5包）</div>
+        <!-- A3 -->
+
+        <div class="item">
+
+          <div class="item-header">
+
+            <div class="item-name">
+              A3
+            </div>
+
+            <div
+              class="reference"
+              id="a3Reference"
+            >
+              前季參考：尚未選擇單位
+            </div>
+
+          </div>
 
           <input
             type="number"
             id="a3"
             min="0"
             step="1"
-            value="0"
-            disabled
+            placeholder="請輸入組數"
           >
 
-          <div class="reference" id="a3Reference">
-            上季參考：尚無資料
+          <div class="unit-text">
+            單位：組（1組＝5包）
           </div>
 
-          <div class="reference" id="a3Display">
-            目前：0組，共0包
-          </div>
         </div>
 
 
-        <div class="paper-row">
-          <div class="paper-name">B4紙</div>
-          <div class="paper-unit">單位：組（1組＝5包）</div>
+        <!-- B4 -->
+
+        <div class="item">
+
+          <div class="item-header">
+
+            <div class="item-name">
+              B4
+            </div>
+
+            <div
+              class="reference"
+              id="b4Reference"
+            >
+              前季參考：尚未選擇單位
+            </div>
+
+          </div>
 
           <input
             type="number"
             id="b4"
             min="0"
             step="1"
-            value="0"
-            disabled
+            placeholder="請輸入組數"
           >
 
-          <div class="reference" id="b4Reference">
-            上季參考：尚無資料
+          <div class="unit-text">
+            單位：組（1組＝5包）
           </div>
 
-          <div class="reference" id="b4Display">
-            目前：0組，共0包
-          </div>
         </div>
 
 
-        <div class="paper-row">
-          <div class="paper-name">B5紙</div>
-          <div class="paper-unit">單位：組（1組＝5包）</div>
+        <!-- B5 -->
+
+        <div class="item">
+
+          <div class="item-header">
+
+            <div class="item-name">
+              B5
+            </div>
+
+            <div
+              class="reference"
+              id="b5Reference"
+            >
+              前季參考：尚未選擇單位
+            </div>
+
+          </div>
 
           <input
             type="number"
             id="b5"
             min="0"
             step="1"
-            value="0"
-            disabled
+            placeholder="請輸入組數"
           >
 
-          <div class="reference" id="b5Reference">
-            上季參考：尚無資料
+          <div class="unit-text">
+            單位：組（1組＝5包）
           </div>
 
-          <div class="reference" id="b5Display">
-            目前：0組，共0包
-          </div>
+        </div>
+
+
+      </div>
+
+
+      <!-- =================================================
+           送出
+           ================================================= -->
+
+      <div class="submit-area">
+
+        <button
+          type="button"
+          id="submitButton"
+          onclick="submitForm()"
+          disabled
+        >
+          送出申請
+        </button>
+
+
+        <div class="note">
+          ※ 請確認申請單位、填寫人及各項紙張需求均填寫正確後再送出。每單位每季限申請一次。
         </div>
 
       </div>
 
-      <button
-        class="submit-button"
-        id="submitButton"
-        disabled
-      >
-        送出
-      </button>
 
     </div>
-  </div>
 
 
-  <script>
-
-    // ============================================
-    // Supabase 設定
-    // ============================================
-
-    const SUPABASE_URL =
-      "https://kkjtllzynmsbydlzlfxx.supabase.co";
-
-    const SUPABASE_PUBLISHABLE_KEY =
-      "sb_publishable_VjHbEO310etdJFGwAyOEXw_NeQW54s_";
-
-    const { createClient } =
-      supabase;
-
-    const db = createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
+  </main>
 
 
-    // ============================================
-    // 系統狀態
-    // ============================================
-
-    let currentQuarter = null;
-    let units = [];
-    let submitting = false;
+<script>
 
 
-    // ============================================
-    // DOM
-    // ============================================
+  /* =========================================================
+     Supabase
+     ========================================================= */
 
-    const quarterName =
-      document.getElementById("quarterName");
+  const SUPABASE_URL =
+    "https://kkjtllzynmsbydlzlfxx.supabase.co";
 
-    const deadlineInfo =
-      document.getElementById("deadlineInfo");
 
-    const statusMessage =
-      document.getElementById("statusMessage");
+  const SUPABASE_KEY =
+    "sb_publishable_VjHbEO310etdJFGwAyOEXw_NeQW54s_";
 
-    const unitSelect =
-      document.getElementById("unit");
 
-    const applicantInput =
-      document.getElementById("applicant");
+  let currentQuarter = null;
+
+
+  /* =========================================================
+     Supabase 錯誤訊息
+     ========================================================= */
+
+  function getSupabaseErrorMessage(error) {
+
+    if (!error) {
+
+      return "未知錯誤";
+
+    }
+
+
+    let message =
+      "資料送出失敗\n\n";
+
+
+    if (error.code) {
+
+      message +=
+        "錯誤代碼：" +
+        error.code +
+        "\n";
+
+    }
+
+
+    if (error.message) {
+
+      message +=
+        "錯誤訊息：" +
+        error.message +
+        "\n";
+
+    }
+
+
+    if (error.details) {
+
+      message +=
+        "詳細資料：" +
+        error.details +
+        "\n";
+
+    }
+
+
+    if (error.hint) {
+
+      message +=
+        "提示：" +
+        error.hint +
+        "\n";
+
+    }
+
+
+    return message.trim();
+
+  }
+
+
+  /* =========================================================
+     取得目前開放季度
+     ========================================================= */
+
+  async function loadQuarter() {
+
+    const status =
+      document.getElementById(
+        "status"
+      );
+
+
+    const formArea =
+      document.getElementById(
+        "formArea"
+      );
+
 
     const submitButton =
-      document.getElementById("submitButton");
+      document.getElementById(
+        "submitButton"
+      );
 
 
-    // ============================================
-    // 顯示訊息
-    // ============================================
-
-    function showStatus(message) {
-
-      statusMessage.textContent = message;
-
-      statusMessage.classList.add("show");
-    }
+    try {
 
 
-    function hideStatus() {
+      const response =
+        await fetch(
 
-      statusMessage.textContent = "";
+          SUPABASE_URL +
+          "/rest/v1/quarters" +
+          "?select=id,period_start,quarter_name,deadline,is_active" +
+          "&is_active=eq.true" +
+          "&order=period_start.desc" +
+          "&limit=1",
 
-      statusMessage.classList.remove("show");
-    }
+          {
+
+            method: "GET",
+
+            headers: {
+
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_KEY
+
+            }
+
+          }
+
+        );
 
 
-    // ============================================
-    // 日期格式
-    // ============================================
+      if (!response.ok) {
 
-    function formatDate(dateString) {
+        throw new Error(
+          "季度資料讀取失敗"
+        );
 
-      const parts =
-        dateString.split("-");
-
-      if (parts.length !== 3) {
-        return dateString;
       }
 
-      return `${parts[0]}年${parts[1]}月${parts[2]}日`;
-    }
+
+      const quarters =
+        await response.json();
 
 
-    // ============================================
-    // 判斷是否仍可填寫
-    // ============================================
+      if (
+        quarters.length === 0
+      ) {
 
-    function isQuarterOpen() {
+        status.className =
+          "status closed";
 
-      if (!currentQuarter) {
-        return false;
+        status.textContent =
+          "目前沒有開放的申請季度。";
+
+        formArea.classList.add(
+          "disabled"
+        );
+
+        submitButton.disabled =
+          true;
+
+        return;
+
       }
 
-      if (!currentQuarter.is_active) {
-        return false;
-      }
+
+      const quarter =
+        quarters[0];
+
 
       const today =
         new Date();
 
-      const todayString =
-        today.toISOString().slice(0, 10);
 
-      return todayString <= currentQuarter.deadline;
-    }
-
-
-    // ============================================
-    // 啟用／停用表單
-    // ============================================
-
-    function setFormEnabled(enabled) {
-
-      unitSelect.disabled = !enabled;
-
-      applicantInput.disabled = !enabled;
-
-      document
-        .querySelectorAll(".paper-row input")
-        .forEach(input => {
-          input.disabled = !enabled;
-        });
-
-      submitButton.disabled = !enabled;
-    }
+      const todayDate =
+        new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
 
 
-    // ============================================
-    // 載入目前季度
-    // ============================================
-
-    async function loadQuarter() {
-
-      const {
-        data,
-        error
-      } = await db
-        .from("quarters")
-        .select(
-          "id, period_start, quarter_name, deadline, is_active"
-        )
-        .eq("is_active", true)
-        .order("period_start", {
-          ascending: false
-        })
-        .limit(1)
-        .maybeSingle();
+      const deadlineDate =
+        new Date(
+          quarter.deadline +
+          "T23:59:59"
+        );
 
 
-      if (error) {
-        throw error;
-      }
+      if (
+        todayDate >
+        deadlineDate
+      ) {
 
+        status.className =
+          "status closed";
 
-      if (!data) {
+        status.textContent =
+          quarter.quarter_name +
+          "申請期限已截止。";
 
-        quarterName.textContent =
-          "目前沒有開放的填寫期間";
+        formArea.classList.add(
+          "disabled"
+        );
 
-        deadlineInfo.textContent =
-          "目前無法填寫";
+        submitButton.disabled =
+          true;
 
-        setFormEnabled(false);
-
-        return false;
-      }
-
-
-      currentQuarter = data;
-
-
-      quarterName.textContent =
-        data.quarter_name;
-
-      deadlineInfo.textContent =
-        `填寫期限：${formatDate(data.deadline)}`;
-
-
-      if (!isQuarterOpen()) {
-
-        deadlineInfo.textContent +=
-          "（目前已截止）";
-
-        setFormEnabled(false);
-
-        return false;
-      }
-
-
-      return true;
-    }
-
-
-    // ============================================
-    // 載入單位
-    // ============================================
-
-    async function loadUnits() {
-
-      const {
-        data,
-        error
-      } = await db
-        .from("units")
-        .select("id, name, sort_order")
-        .order("sort_order", {
-          ascending: true
-        });
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      units = data || [];
-
-
-      unitSelect.innerHTML =
-        '<option value="">請選擇單位</option>';
-
-
-      units.forEach(unit => {
-
-        const option =
-          document.createElement("option");
-
-        option.value =
-          unit.id;
-
-        option.textContent =
-          unit.name;
-
-        unitSelect.appendChild(option);
-      });
-    }
-
-
-    // ============================================
-    // 取得上一季參考數量
-    // ============================================
-
-    async function loadPreviousReference(unitId) {
-
-      clearReferences();
-
-
-      if (!unitId || !currentQuarter) {
         return;
+
       }
 
 
-      const {
-        data,
-        error
-      } = await db.rpc(
-        "get_previous_quarter_reference",
-        {
-          p_quarter_id:
-            currentQuarter.id,
+      currentQuarter =
+        quarter;
 
-          p_unit_id:
-            Number(unitId)
-        }
+
+      status.className =
+        "status open";
+
+
+      status.textContent =
+        quarter.quarter_name +
+        "目前開放申請，截止日：" +
+        quarter.deadline +
+        "。";
+
+
+      formArea.classList.remove(
+        "disabled"
       );
 
 
-      if (error) {
+      submitButton.disabled =
+        false;
 
-        console.error(
-          "取得上一季參考數量失敗：",
-          error
+    }
+
+
+    catch (error) {
+
+      console.error(
+        "loadQuarter error:",
+        error
+      );
+
+
+      status.className =
+        "status closed";
+
+
+      status.textContent =
+        "申請期間資料讀取失敗，請通知總務課處理。";
+
+
+      formArea.classList.add(
+        "disabled"
+      );
+
+
+      submitButton.disabled =
+        true;
+
+    }
+
+  }
+
+
+  /* =========================================================
+     取得單位
+     ========================================================= */
+
+  async function loadUnits() {
+
+    const unitSelect =
+      document.getElementById(
+        "unit"
+      );
+
+
+    try {
+
+
+      const response =
+        await fetch(
+
+          SUPABASE_URL +
+          "/rest/v1/units" +
+          "?select=id,name,sort_order" +
+          "&order=sort_order.asc",
+
+          {
+
+            method: "GET",
+
+            headers: {
+
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_KEY
+
+            }
+
+          }
+
         );
 
-        return;
+
+      if (!response.ok) {
+
+        throw new Error(
+          "單位資料讀取失敗"
+        );
+
       }
 
 
-      if (!data || data.length === 0) {
+      const units =
+        await response.json();
+
+
+      units.forEach(
+        function(unit) {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            unit.id;
+
+
+          option.textContent =
+            unit.name;
+
+
+          unitSelect.appendChild(
+            option
+          );
+
+        }
+      );
+
+    }
+
+
+    catch (error) {
+
+      console.error(
+        "loadUnits error:",
+        error
+      );
+
+
+      unitSelect.innerHTML =
+        '<option value="">單位資料讀取失敗</option>';
+
+    }
+
+  }
+
+
+  /* =========================================================
+     清除前季參考
+     ========================================================= */
+
+  function clearReferences() {
+
+    document.getElementById(
+      "reportReference"
+    ).textContent =
+      "前季參考：無資料";
+
+
+    document.getElementById(
+      "a4Reference"
+    ).textContent =
+      "前季參考：無資料";
+
+
+    document.getElementById(
+      "a3Reference"
+    ).textContent =
+      "前季參考：無資料";
+
+
+    document.getElementById(
+      "b4Reference"
+    ).textContent =
+      "前季參考：無資料";
+
+
+    document.getElementById(
+      "b5Reference"
+    ).textContent =
+      "前季參考：無資料";
+
+  }
+
+
+  /* =========================================================
+     取得前一季度參考資料
+     ========================================================= */
+
+  async function loadPreviousReference() {
+
+    const unitId =
+      document.getElementById(
+        "unit"
+      ).value;
+
+
+    if (!unitId) {
+
+      clearReferences();
+
+      return;
+
+    }
+
+
+    if (!currentQuarter) {
+
+      clearReferences();
+
+      return;
+
+    }
+
+
+    try {
+
+
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/rpc/get_previous_quarter_reference";
+
+
+      const response =
+        await fetch(
+
+          url,
+
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_KEY,
+
+              "Content-Type":
+                "application/json"
+
+            },
+
+            body:
+              JSON.stringify({
+
+                p_quarter_id:
+                  currentQuarter.id,
+
+                p_unit_id:
+                  Number(unitId)
+
+              })
+
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        console.error(
+          "Reference API error:",
+          errorText
+        );
+
+        clearReferences();
 
         return;
+
+      }
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        !data ||
+        data.length === 0
+      ) {
+
+        clearReferences();
+
+        return;
+
       }
 
 
@@ -610,539 +1414,542 @@
 
 
       document.getElementById(
-        "reportPaperReference"
-      ).textContent =
-        `上季參考：${reference.report_paper_boxes}箱`;
+        "reportReference"
+      ).innerHTML =
+        "前季參考：<strong>" +
+        Number(
+          reference.report_paper_boxes || 0
+        ) +
+        " 箱</strong>";
 
 
       document.getElementById(
         "a4Reference"
-      ).textContent =
-        `上季參考：${reference.a4_sets}組（${reference.a4_sets * 5}包）`;
+      ).innerHTML =
+        "前季參考：<strong>" +
+        Number(
+          reference.a4_sets || 0
+        ) +
+        " 組</strong>";
 
 
       document.getElementById(
         "a3Reference"
-      ).textContent =
-        `上季參考：${reference.a3_sets}組（${reference.a3_sets * 5}包）`;
+      ).innerHTML =
+        "前季參考：<strong>" +
+        Number(
+          reference.a3_sets || 0
+        ) +
+        " 組</strong>";
 
 
       document.getElementById(
         "b4Reference"
-      ).textContent =
-        `上季參考：${reference.b4_sets}組（${reference.b4_sets * 5}包）`;
+      ).innerHTML =
+        "前季參考：<strong>" +
+        Number(
+          reference.b4_sets || 0
+        ) +
+        " 組</strong>";
 
 
       document.getElementById(
         "b5Reference"
-      ).textContent =
-        `上季參考：${reference.b5_sets}組（${reference.b5_sets * 5}包）`;
+      ).innerHTML =
+        "前季參考：<strong>" +
+        Number(
+          reference.b5_sets || 0
+        ) +
+        " 組</strong>";
+
     }
 
 
-    function clearReferences() {
+    catch (error) {
 
-      document.getElementById(
-        "reportPaperReference"
-      ).textContent =
-        "上季參考：尚無資料";
-
-
-      document.getElementById(
-        "a4Reference"
-      ).textContent =
-        "上季參考：尚無資料";
+      console.error(
+        "loadPreviousReference error:",
+        error
+      );
 
 
-      document.getElementById(
-        "a3Reference"
-      ).textContent =
-        "上季參考：尚無資料";
+      clearReferences();
+
+    }
+
+  }
 
 
-      document.getElementById(
-        "b4Reference"
-      ).textContent =
-        "上季參考：尚無資料";
+  /* =========================================================
+     單位變更
+     ========================================================= */
+
+  document
+    .getElementById("unit")
+    .addEventListener(
+      "change",
+      async function() {
+
+        clearReferences();
+
+        document.getElementById(
+          "reportPaper"
+        ).value = "";
+
+        document.getElementById(
+          "a4"
+        ).value = "";
+
+        document.getElementById(
+          "a3"
+        ).value = "";
+
+        document.getElementById(
+          "b4"
+        ).value = "";
+
+        document.getElementById(
+          "b5"
+        ).value = "";
 
 
-      document.getElementById(
-        "b5Reference"
-      ).textContent =
-        "上季參考：尚無資料";
+        await loadPreviousReference();
+
+      }
+    );
+
+
+  /* =========================================================
+     送出申請
+     ========================================================= */
+
+  async function submitForm() {
+
+
+    if (!currentQuarter) {
+
+      alert(
+        "目前沒有開放的申請季度。"
+      );
+
+      return;
+
     }
 
 
-    // ============================================
-    // 組／包數量顯示
-    // ============================================
+    const today =
+      new Date();
 
-    function updatePackDisplay(
-      inputId,
-      displayId
+
+    const todayDate =
+      new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+
+    const deadlineDate =
+      new Date(
+        currentQuarter.deadline +
+        "T23:59:59"
+      );
+
+
+    if (
+      todayDate >
+      deadlineDate
     ) {
 
-      const input =
-        document.getElementById(inputId);
+      alert(
+        "目前已超過申請期限，無法送出。"
+      );
 
-      const display =
-        document.getElementById(displayId);
+      return;
 
-
-      const sets =
-        Number(input.value) || 0;
-
-      const packs =
-        sets * 5;
-
-
-      display.textContent =
-        `目前：${sets}組，共${packs}包`;
     }
 
 
-    document
-      .getElementById("a4")
-      .addEventListener(
-        "input",
-        function () {
-          updatePackDisplay(
-            "a4",
-            "a4Display"
-          );
-        }
+    const unitId =
+      document.getElementById(
+        "unit"
+      ).value;
+
+
+    const applicant =
+      document.getElementById(
+        "name"
+      ).value.trim();
+
+
+    if (!unitId) {
+
+      alert(
+        "請選擇申請單位"
       );
 
+      return;
 
-    document
-      .getElementById("a3")
-      .addEventListener(
-        "input",
-        function () {
-          updatePackDisplay(
-            "a3",
-            "a3Display"
-          );
-        }
+    }
+
+
+    if (!applicant) {
+
+      alert(
+        "請輸入填寫人姓名"
       );
 
+      return;
 
-    document
-      .getElementById("b4")
-      .addEventListener(
-        "input",
-        function () {
-          updatePackDisplay(
-            "b4",
-            "b4Display"
-          );
-        }
-      );
+    }
 
 
-    document
-      .getElementById("b5")
-      .addEventListener(
-        "input",
-        function () {
-          updatePackDisplay(
-            "b5",
-            "b5Display"
-          );
-        }
-      );
+    const reportPaper =
+      document.getElementById(
+        "reportPaper"
+      ).value;
 
 
-    // ============================================
-    // 取得數量
-    // ============================================
+    const a4 =
+      document.getElementById(
+        "a4"
+      ).value;
 
-    function getNumber(inputId) {
 
-      const value =
-        Number(
-          document.getElementById(inputId).value
-        );
+    const a3 =
+      document.getElementById(
+        "a3"
+      ).value;
 
+
+    const b4 =
+      document.getElementById(
+        "b4"
+      ).value;
+
+
+    const b5 =
+      document.getElementById(
+        "b5"
+      ).value;
+
+
+    const values = [
+
+      reportPaper,
+      a4,
+      a3,
+      b4,
+      b5
+
+    ];
+
+
+    for (
+      const value of values
+    ) {
 
       if (
-        !Number.isInteger(value) ||
-        value < 0
-      ) {
-        return null;
-      }
-
-
-      return value;
-    }
-
-
-    // ============================================
-    // 建立詳細錯誤訊息
-    // ============================================
-
-    function getSupabaseErrorMessage(error) {
-
-      if (!error) {
-        return "未知錯誤";
-      }
-
-
-      let message =
-        "資料送出失敗\n\n";
-
-
-      if (error.code) {
-        message +=
-          `錯誤代碼：${error.code}\n`;
-      }
-
-
-      if (error.message) {
-        message +=
-          `錯誤訊息：${error.message}\n`;
-      }
-
-
-      if (error.details) {
-        message +=
-          `詳細資料：${error.details}\n`;
-      }
-
-
-      if (error.hint) {
-        message +=
-          `提示：${error.hint}\n`;
-      }
-
-
-      return message.trim();
-    }
-
-
-    // ============================================
-    // 送出申請
-    // ============================================
-
-    async function submitRequest() {
-
-      if (submitting) {
-        return;
-      }
-
-
-      hideStatus();
-
-
-      // 再次確認填寫期間
-      if (!isQuarterOpen()) {
-
-        showStatus(
-          "目前已超過填寫期限，無法送出。"
-        );
-
-        setFormEnabled(false);
-
-        return;
-      }
-
-
-      const unitId =
-        Number(unitSelect.value);
-
-
-      const applicant =
-        applicantInput.value.trim();
-
-
-      if (!unitId) {
-
-        alert("請選擇單位。");
-
-        return;
-      }
-
-
-      if (!applicant) {
-
-        alert("請輸入填寫人姓名。");
-
-        applicantInput.focus();
-
-        return;
-      }
-
-
-      const reportPaper =
-        getNumber("reportPaper");
-
-      const a4 =
-        getNumber("a4");
-
-      const a3 =
-        getNumber("a3");
-
-      const b4 =
-        getNumber("b4");
-
-      const b5 =
-        getNumber("b5");
-
-
-      if (
-        reportPaper === null ||
-        a4 === null ||
-        a3 === null ||
-        b4 === null ||
-        b5 === null
+        value === "" ||
+        value === null
       ) {
 
         alert(
-          "紙張數量請輸入0以上的整數。"
+          "請填寫全部紙張需求數量"
         );
 
         return;
+
       }
 
 
-      const selectedUnit =
-        units.find(
-          unit => unit.id === unitId
+      if (
+        !Number.isInteger(
+          Number(value)
+        )
+      ) {
+
+        alert(
+          "紙張數量請輸入整數"
         );
 
-
-      const unitName =
-        selectedUnit
-          ? selectedUnit.name
-          : "";
-
-
-      const confirmation =
-
-`請確認本次申請資料：
-
-單位：${unitName}
-填寫人：${applicant}
-
-報表紙：${reportPaper}箱
-A4紙：${a4}組（${a4 * 5}包）
-A3紙：${a3}組（${a3 * 5}包）
-B4紙：${b4}組（${b4 * 5}包）
-B5紙：${b5}組（${b5 * 5}包）
-
-確定要送出嗎？`;
-
-
-      if (!confirm(confirmation)) {
         return;
+
       }
 
 
-      submitting = true;
+      if (
+        Number(value) < 0
+      ) {
 
-      submitButton.disabled = true;
-
-      submitButton.textContent =
-        "送出中……";
-
-
-      try {
-
-        const {
-          data,
-          error
-        } = await db
-          .from("quarterly_requests")
-          .insert({
-            quarter_id:
-              currentQuarter.id,
-
-            unit_id:
-              unitId,
-
-            applicant_name:
-              applicant,
-
-            report_paper_boxes:
-              reportPaper,
-
-            a4_sets:
-              a4,
-
-            a3_sets:
-              a3,
-
-            b4_sets:
-              b4,
-
-            b5_sets:
-              b5
-          });
-
-
-        // 診斷用紀錄
-        console.log(
-          "INSERT 回傳 data：",
-          data
+        alert(
+          "紙張數量不可小於 0"
         );
 
-        console.log(
-          "INSERT 回傳 error：",
-          error
+        return;
+
+      }
+
+    }
+
+
+    const submitButton =
+      document.getElementById(
+        "submitButton"
+      );
+
+
+    submitButton.disabled =
+      true;
+
+
+    submitButton.textContent =
+      "送出中……";
+
+
+    try {
+
+
+      const response =
+        await fetch(
+
+          SUPABASE_URL +
+          "/rest/v1/quarterly_requests",
+
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                "Bearer " +
+                SUPABASE_KEY,
+
+              "Content-Type":
+                "application/json",
+
+              "Prefer":
+                "return=minimal"
+
+            },
+
+            body:
+              JSON.stringify({
+
+                quarter_id:
+                  currentQuarter.id,
+
+                unit_id:
+                  Number(unitId),
+
+                applicant_name:
+                  applicant,
+
+                report_paper_boxes:
+                  Number(reportPaper),
+
+                a4_sets:
+                  Number(a4),
+
+                a3_sets:
+                  Number(a3),
+
+                b4_sets:
+                  Number(b4),
+
+                b5_sets:
+                  Number(b5)
+
+              })
+
+          }
+
         );
 
 
-        if (error) {
+      if (!response.ok) {
 
-          // 只有「本季度＋單位」的唯一限制才顯示重複填寫
-          if (
-            error.code === "23505" &&
-            error.message &&
-            error.message.includes(
-              "quarterly_requests_quarter_unit_unique"
-            )
-          ) {
 
-            throw new Error(
-              "此單位本季度已經送出申請，不能重複填寫。"
-            );
+        const errorText =
+          await response.text();
+
+
+        console.error(
+          "INSERT error:",
+          errorText
+        );
+
+
+        if (
+          response.status === 409 ||
+          errorText.includes(
+            "quarterly_requests_quarter_unit_unique"
+          )
+        ) {
+
+          alert(
+            "此單位本季度已經送出申請，不能重複填寫。"
+          );
+
+        } else {
+
+          let message =
+            "資料送出失敗\n\n" +
+            "HTTP狀態：" +
+            response.status;
+
+
+          try {
+
+            const errorData =
+              JSON.parse(
+                errorText
+              );
+
+
+            if (
+              errorData.message
+            ) {
+
+              message +=
+                "\n錯誤訊息：" +
+                errorData.message;
+
+            }
+
+
+            if (
+              errorData.details
+            ) {
+
+              message +=
+                "\n詳細資料：" +
+                errorData.details;
+
+            }
+
+
+            if (
+              errorData.hint
+            ) {
+
+              message +=
+                "\n提示：" +
+                errorData.hint;
+
+            }
+
+          }
+
+          catch (parseError) {
+
+            if (errorText) {
+
+              message +=
+                "\n" +
+                errorText;
+
+            }
+
           }
 
 
-          // 其他錯誤直接顯示完整 Supabase 錯誤
-          throw new Error(
-            getSupabaseErrorMessage(error)
+          alert(
+            message
           );
+
         }
 
 
-        // ========================================
-        // INSERT 成功
-        // ========================================
-
-        alert(
-          `申請已成功送出！
-
-單位：${unitName}
-填寫人：${applicant}
-
-報表紙：${reportPaper}箱
-A4紙：${a4}組（${a4 * 5}包）
-A3紙：${a3}組（${a3 * 5}包）
-B4紙：${b4}組（${b4 * 5}包）
-B5紙：${b5}組（${b5 * 5}包）`
-        );
+        submitButton.disabled =
+          false;
 
 
-        // 送出成功後鎖定表單
-        setFormEnabled(false);
-
-        showStatus(
-          "本季度申請已完成送出。"
-        );
+        submitButton.textContent =
+          "送出申請";
 
 
-      } catch (error) {
+        return;
 
-        console.error(
-          "送出申請失敗：",
-          error
-        );
-
-
-        alert(
-          error.message ||
-          "送出失敗，請稍後再試。"
-        );
-
-
-        // 失敗後恢復送出按鈕
-        submitButton.disabled = false;
       }
 
 
-      submitting = false;
+      alert(
+        "紙張需求已成功送出！"
+      );
+
+
+      /*
+       * 送出成功後鎖定表單。
+       * 避免使用者再次操作造成誤會。
+       */
+
+      document
+        .getElementById(
+          "formArea"
+        )
+        .classList.add(
+          "disabled"
+        );
+
+
+      submitButton.disabled =
+        true;
+
 
       submitButton.textContent =
-        "送出";
+        "本季度已完成申請";
+
+
     }
 
 
-    submitButton.addEventListener(
-      "click",
-      submitRequest
-    );
+    catch (error) {
+
+      console.error(
+        "submitForm error:",
+        error
+      );
 
 
-    // ============================================
-    // 選擇單位
-    // ============================================
-
-    unitSelect.addEventListener(
-      "change",
-      async function () {
-
-        hideStatus();
-
-        await loadPreviousReference(
-          unitSelect.value
-        );
-      }
-    );
+      alert(
+        "系統連線失敗，請稍後再試。"
+      );
 
 
-    // ============================================
-    // 初始化
-    // ============================================
-
-    async function init() {
-
-      try {
-
-        const quarterOpen =
-          await loadQuarter();
+      submitButton.disabled =
+        false;
 
 
-        if (!quarterOpen) {
-          return;
-        }
+      submitButton.textContent =
+        "送出申請";
 
-
-        await loadUnits();
-
-
-        setFormEnabled(true);
-
-
-      } catch (error) {
-
-        console.error(
-          "系統初始化失敗：",
-          error
-        );
-
-
-        quarterName.textContent =
-          "系統載入失敗";
-
-
-        deadlineInfo.textContent =
-          "請稍後重新整理頁面";
-
-
-        showStatus(
-          "無法連線至資料庫，請稍後再試。"
-        );
-
-
-        setFormEnabled(false);
-      }
     }
 
+  }
 
-    init();
 
-  </script>
+  /* =========================================================
+     初始化
+     ========================================================= */
+
+  async function init() {
+
+    await loadUnits();
+
+    await loadQuarter();
+
+  }
+
+
+  init();
+
+</script>
+
 
 </body>
 </html>
