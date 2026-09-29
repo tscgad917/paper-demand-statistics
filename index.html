@@ -904,38 +904,42 @@ B5紙：${b5}組（${b5 * 5}包）
 
       try {
 
-        const {
-          error
-        } = await db
-          .from("quarterly_requests")
-          .insert({
-            quarter_id:
-              currentQuarter.id,
+       const {
+  data,
+  error
+} = await db
+  .from("quarterly_requests")
+  .insert({
+    quarter_id:
+      currentQuarter.id,
 
-            unit_id:
-              unitId,
+    unit_id:
+      unitId,
 
-            applicant_name:
-              applicant,
+    applicant_name:
+      applicant,
 
-            report_paper_boxes:
-              reportPaper,
+    report_paper_boxes:
+      reportPaper,
 
-            a4_sets:
-              a4,
+    a4_sets:
+      a4,
 
-            a3_sets:
-              a3,
+    a3_sets:
+      a3,
 
-            b4_sets:
-              b4,
+    b4_sets:
+      b4,
 
-            b5_sets:
-              b5
-          });
+    b5_sets:
+      b5
+  });
+
+console.log("INSERT 回傳 data：", data);
+console.log("INSERT 回傳 error：", error);
 
 
-        if (error) {
+if (error) {
 
           // UNIQUE constraint
           if (
