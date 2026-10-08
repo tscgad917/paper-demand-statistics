@@ -635,8 +635,18 @@
 
       if (!response.ok) {
 
+        const errorText =
+          await response.text();
+
+        console.error(
+          "季度 API 錯誤：",
+          response.status,
+          errorText
+        );
+
         throw new Error(
-          "季度資料載入失敗"
+          "季度資料載入失敗：" +
+          response.status
         );
 
       }
