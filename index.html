@@ -556,7 +556,7 @@
    * Supabase 設定
    * ============================================================
    *
-   * 已改為使用「庫存統計」主專案
+   * 使用「庫存統計」主專案
    */
 
   const SUPABASE_URL =
@@ -615,19 +615,25 @@
 
     try {
 
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/quarters" +
+        "?select=id,period_start,quarter_name,deadline,is_active" +
+        "&is_active=eq.true" +
+        "&order=period_start.desc" +
+        "&limit=1" +
+        "&apikey=" +
+        encodeURIComponent(SUPABASE_KEY);
+
+
       const response =
         await fetch(
-          SUPABASE_URL +
-          "/rest/v1/quarters" +
-          "?select=id,period_start,quarter_name,deadline,is_active" +
-          "&is_active=eq.true" +
-          "&order=period_start.desc" +
-          "&limit=1",
+          url,
           {
+            method: "GET",
+
             headers: {
-              apikey: SUPABASE_KEY,
-              Authorization:
-                "Bearer " + SUPABASE_KEY
+              apikey: SUPABASE_KEY
             }
           }
         );
@@ -744,26 +750,31 @@
    * 載入單位
    * ============================================================
    *
-   * 注意：
    * 主「庫存統計」專案的 units 沒有 sort_order 欄位。
-   * 因此改用 id 排序。
+   * 因此使用 id 排序。
    */
 
   async function loadUnits() {
 
     try {
 
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/units" +
+        "?select=id,name" +
+        "&order=id.asc" +
+        "&apikey=" +
+        encodeURIComponent(SUPABASE_KEY);
+
+
       const response =
         await fetch(
-          SUPABASE_URL +
-          "/rest/v1/units" +
-          "?select=id,name" +
-          "&order=id.asc",
+          url,
           {
+            method: "GET",
+
             headers: {
-              apikey: SUPABASE_KEY,
-              Authorization:
-                "Bearer " + SUPABASE_KEY
+              apikey: SUPABASE_KEY
             }
           }
         );
@@ -771,8 +782,18 @@
 
       if (!response.ok) {
 
+        const errorText =
+          await response.text();
+
+        console.error(
+          "單位 API 錯誤：",
+          response.status,
+          errorText
+        );
+
         throw new Error(
-          "單位資料載入失敗"
+          "單位資料載入失敗：" +
+          response.status
         );
 
       }
@@ -857,17 +878,21 @@
 
     try {
 
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/rpc/get_previous_quarter_reference" +
+        "?apikey=" +
+        encodeURIComponent(SUPABASE_KEY);
+
+
       const response =
         await fetch(
-          SUPABASE_URL +
-          "/rest/v1/rpc/get_previous_quarter_reference",
+          url,
           {
             method: "POST",
 
             headers: {
               apikey: SUPABASE_KEY,
-              Authorization:
-                "Bearer " + SUPABASE_KEY,
               "Content-Type":
                 "application/json"
             },
@@ -885,8 +910,18 @@
 
       if (!response.ok) {
 
+        const errorText =
+          await response.text();
+
+        console.error(
+          "上一季 API 錯誤：",
+          response.status,
+          errorText
+        );
+
         throw new Error(
-          "上一季資料載入失敗"
+          "上一季資料載入失敗：" +
+          response.status
         );
 
       }
@@ -1093,17 +1128,21 @@
 
     try {
 
+      const url =
+        SUPABASE_URL +
+        "/rest/v1/quarterly_requests" +
+        "?apikey=" +
+        encodeURIComponent(SUPABASE_KEY);
+
+
       const response =
         await fetch(
-          SUPABASE_URL +
-          "/rest/v1/quarterly_requests",
+          url,
           {
             method: "POST",
 
             headers: {
               apikey: SUPABASE_KEY,
-              Authorization:
-                "Bearer " + SUPABASE_KEY,
               "Content-Type":
                 "application/json",
               Prefer:
@@ -1147,6 +1186,7 @@
 
         console.error(
           "Supabase error:",
+          response.status,
           errorText
         );
 
