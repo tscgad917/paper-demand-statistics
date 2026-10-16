@@ -1002,6 +1002,8 @@
           "/rest/v1/quarters" +
           "?select=id,period_start,quarter_name,deadline,is_active" +
           "&is_active=eq.true" +
+          "&period_start=lte." +
+          (function(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");})() +
           "&order=period_start.desc" +
           "&limit=1",
 
