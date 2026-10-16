@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>紙張需求管理｜總務課</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#243247;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif}
+header{background:#14532d;color:#fff;padding:20px 16px}header div,main{max-width:1200px;margin:auto}
+h1{font-size:23px;margin:0 0 6px}.sub{font-size:14px;opacity:.9}main{padding:22px 14px 40px}
+.panel{background:white;border:1px solid #dfe7e1;border-radius:12px;padding:16px;margin-bottom:16px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}select,input,button{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:7px}
+button{background:#14532d;color:white;border:0;cursor:pointer}.hint{font-size:13px;color:#64748b;margin-top:8px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap;font-size:14px}th{background:#f0f5f1}
+.error{color:#b91c1c;white-space:pre-wrap}.muted{color:#64748b}
+a{color:inherit}
+</style>
+</head>
+<body>
+<header><div><h1>紙張需求管理</h1><div class="sub">總務課管理中心｜查看各單位季度申請紀錄</div></div></header>
+<main>
+<section class="panel">
+<div class="controls">
+<strong id="state">正在驗證管理員身分……</strong>
+<button id="reload" type="button">重新載入</button>
+<a href="../inventory-system/admin-center.html">返回統一管理中心</a>
+</div>
+<div id="message" class="hint">僅限核准管理帳號使用。</div>
+</section>
+<section class="panel">
+<div class="controls">
+<label for="quarter">季度：</label><select id="quarter"><option value="">全部季度</option></select>
+<label for="unit">單位：</label><select id="unit"><option value="">全部單位</option></select>
+<input id="search" placeholder="搜尋單位或填寫人" aria-label="搜尋單位或填寫人">
+</div>
+<p id="summary" class="hint">尚未載入資料。</p>
+<div class="table-wrap"><table><thead><tr><th>季度</th><th>單位</th><th>填寫人</th><th>報表紙（箱）</th><th>A4（組）</th><th>A3（組）</th><th>B4（組）</th><th>B5（組）</th><th>申請編號</th></tr></thead><tbody id="rows"><tr><td colspan="9">等待驗證登入。</td></tr></tbody></table></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+"use strict";
+const URL="https://onebxqajsiqmhfcizaxl.supabase.co";
+const KEY="sb_publishable_TihaeP-c-zcnydbqeuN7_A_Qc9eL7Zq";
+const ALLOWED="tscgad917@gmail.com";
+const token=localStorage.getItem("admin_access_token");
+const refresh=localStorage.getItem("admin_refresh_token");
+const email=(localStorage.getItem("admin_email")||"").toLowerCase();
+const $=id=>document.getElementById(id);
+let db=null, allRows=[];
+function escapeHTML(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function loginAgain(){["admin_access_token","admin_refresh_token","admin_email"].forEach(k=>localStorage.removeItem(k));location.replace("../inventory-system/admin.html");}
+function showError(msg){$("message").className="hint error";$("message").textContent=msg;}
+async function init(){
+ if(!token||!refresh||email!==ALLOWED){loginAgain();return;}
+ db=window.supabase.createClient(URL,KEY);
+ const session=await db.auth.setSession({access_token:token,refresh_token:refresh});
+ if(session.error)throw session.error;
+ const user=await db.auth.getUser();
+ if(user.error)throw user.error;
+ if((user.data.user.email||"").toLowerCase()!==ALLOWED){loginAgain();return;}
+ $("state").textContent="已登入："+ALLOWED;
+ await loadFilters();
+ await loadRows();
+}
+async function loadFilters(){
+ const [q,u]=await Promise.all([
+  db.from("quarters").select("id,quarter_name,period_start").order("period_start",{ascending:false}),
+  db.from("units").select("id,name").order("id",{ascending:true})
+ ]);
+ if(q.error)throw q.error;if(u.error)throw u.error;
+ q.data.forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.quarter_name;$("quarter").appendChild(o);});
+ u.data.forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.name;$("unit").appendChild(o);});
+}
+async function loadRows(){
+ $("rows").innerHTML='<tr><td colspan="9">資料讀取中……</td></tr>';
+ $("message").className="hint";$("message").textContent="";
+ const {data,error}=await db.from("quarterly_requests").select("id,quarter_id,unit_id,applicant_name,report_paper_boxes,a4_sets,a3_sets,b4_sets,b5_sets,quarters(quarter_name),units(name)").order("id",{ascending:false});
+ if(error){$("rows").innerHTML='<tr><td colspan="9">無法讀取資料。</td></tr>';showError("讀取失敗："+error.message+"\n請確認 quarterly_requests 的 authenticated SELECT RLS 政策及資料表關聯。");$("summary").textContent="讀取失敗";return;}
+ allRows=data||[];
+ render();
+}
+function render(){
+ const q=$("quarter").value,u=$("unit").value,s=$("search").value.trim().toLowerCase();
+ const rows=allRows.filter(r=>(!q||String(r.quarter_id)===q)&&(!u||String(r.unit_id)===u)&&(!s||String(r.units?.name||"").toLowerCase().includes(s)||String(r.applicant_name||"").toLowerCase().includes(s)));
+ $("summary").textContent="共 "+rows.length+" 筆申請紀錄";
+ if(!rows.length){$("rows").innerHTML='<tr><td colspan="9">沒有符合條件的申請紀錄。</td></tr>';return;}
+ $("rows").innerHTML=rows.map(r=>'<tr><td>'+escapeHTML(r.quarters?.quarter_name||r.quarter_id)+'</td><td>'+escapeHTML(r.units?.name||r.unit_id)+'</td><td>'+escapeHTML(r.applicant_name)+'</td><td>'+Number(r.report_paper_boxes||0)+'</td><td>'+Number(r.a4_sets||0)+'</td><td>'+Number(r.a3_sets||0)+'</td><td>'+Number(r.b4_sets||0)+'</td><td>'+Number(r.b5_sets||0)+'</td><td>'+escapeHTML(r.id)+'</td></tr>').join("");
+}
+$("reload").addEventListener("click",()=>loadRows().catch(e=>showError("載入失敗："+e.message)));
+["quarter","unit","search"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",render));
+init().catch(e=>{console.error(e);showError("登入或初始化失敗："+e.message);});
+})();
+</script>
+</body>
+</html>
