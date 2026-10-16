@@ -50,7 +50,10 @@ const email=(localStorage.getItem("admin_email")||"").toLowerCase();
 const $=id=>document.getElementById(id);
 let db=null, allRows=[];
 function escapeHTML(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function loginAgain(){["admin_access_token","admin_refresh_token","admin_email"].forEach(k=>localStorage.removeItem(k));location.replace("../inventory-system/admin.html");}
+function loginAgain(){
+ $("state").textContent="尚未通過登入驗證";
+ showError("目前頁面未取得有效的統一登入資訊，或登入帳號未獲授權。\n為保留排查線索，這個頁面不會清除登入資料，也不會自動跳轉。\n請回統一管理中心重新登入後，再點選「紙張需求管理」。");
+}
 function showError(msg){$("message").className="hint error";$("message").textContent=msg;}
 async function init(){
  if(!token||!refresh||email!==ALLOWED){loginAgain();return;}
