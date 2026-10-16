@@ -78,9 +78,6 @@ async function init(){
   $("state").textContent="請由統一管理中心進入";
   showError("為避免直接開啟後台連結，請先返回統一管理中心，再點選「紙張需求管理」。");
   $("rows").innerHTML='<tr><td colspan="9">尚未授權進入此管理頁面。</td></tr>';
-  const back=document.createElement("p");
-  back.innerHTML='<a href="../inventory-system/admin-center.html">返回統一管理中心</a>';
-  $("message").appendChild(back);
   return;
  }
  sessionStorage.setItem("paperAdminTabAuthorized","yes");
