@@ -56,30 +56,39 @@ function loginAgain(){
 }
 function showError(msg){$("message").className="hint error";$("message").textContent=msg;}
 async function init(){
- if(!token||!refresh||email!==ALLOWED){loginAgain();return;}
  db=window.supabase.createClient(URL,KEY);
- let session=await db.auth.setSession({access_token:token,refresh_token:refresh});
- if(session.error){
-  const refreshResponse=await fetch(URL+"/auth/v1/token?grant_type=refresh_token",{
-   method:"POST",
-   headers:{"apikey":KEY,"Content-Type":"application/json"},
-   body:JSON.stringify({refresh_token:localStorage.getItem("admin_refresh_token")})
-  });
-  const refreshed=await refreshResponse.json();
-  if(!refreshResponse.ok)throw new Error(refreshed.msg||refreshed.message||"登入已失效，請重新登入");
-  localStorage.setItem("admin_access_token",refreshed.access_token);
-  localStorage.setItem("admin_refresh_token",refreshed.refresh_token);
-  session=await db.auth.setSession({access_token:refreshed.access_token,refresh_token:refreshed.refresh_token});
-  if(session.error)throw session.error;
+ let sessionResult=await db.auth.getSession();
+ if(sessionResult.error)throw sessionResult.error;
+ let session=sessionResult.data&&sessionResult.data.session;
+
+ // 優先使用統一登入入口保存的 Supabase 共用 session。
+ // 舊版 localStorage 憑證僅作相容備援，不要求使用者再次輸入帳密。
+ if(!session){
+  const legacyToken=localStorage.getItem("admin_access_token");
+  const legacyRefresh=localStorage.getItem("admin_refresh_token");
+  const legacyEmail=(localStorage.getItem("admin_email")||"").toLowerCase();
+  if(!legacyToken||!legacyRefresh||legacyEmail!==ALLOWED){
+   loginAgain();
+   return;
+  }
+  sessionResult=await db.auth.setSession({access_token:legacyToken,refresh_token:legacyRefresh});
+  if(sessionResult.error)throw sessionResult.error;
+  session=sessionResult.data&&sessionResult.data.session;
  }
- if(session.data&&session.data.session){
-  localStorage.setItem("admin_access_token",session.data.session.access_token);
-  localStorage.setItem("admin_refresh_token",session.data.session.refresh_token);
- }
+ if(!session)throw new Error("Supabase 未回傳有效的登入 session。");
+
  const user=await db.auth.getUser();
  if(user.error)throw user.error;
- if((user.data.user.email||"").toLowerCase()!==ALLOWED){loginAgain();return;}
- $("state").textContent="已登入："+ALLOWED;
+ const actualEmail=(user.data.user.email||"").toLowerCase();
+ if(actualEmail!==ALLOWED){
+  await db.auth.signOut();
+  throw new Error("目前登入的帳號未獲授權。");
+ }
+ localStorage.setItem("admin_access_token",session.access_token);
+ localStorage.setItem("admin_refresh_token",session.refresh_token);
+ localStorage.setItem("admin_email",actualEmail);
+
+ $("state").textContent="已登入："+actualEmail;
  await loadFilters();
  await loadRows();
 }
