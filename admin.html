@@ -12,7 +12,7 @@ h1{font-size:23px;margin:0 0 6px}.sub{font-size:14px;opacity:.9}main{padding:22p
 .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}select,input,button{font:inherit;padding:10px;border:1px solid #cbd5e1;border-radius:7px}
 button{background:#14532d;color:white;border:0;cursor:pointer}.hint{font-size:13px;color:#64748b;margin-top:8px}
 .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap;font-size:14px}th{background:#f0f5f1}
-.error{color:#b91c1c;white-space:pre-wrap}.muted{color:#64748b}
+.error{color:#b91c1c;white-space:pre-wrap}.muted{color:#64748b}.field{display:flex;flex-direction:column;gap:5px;min-width:180px}.field label{font-size:13px;color:#475569}.field input{min-width:180px}.primary{background:#166534}.success{color:#166534;white-space:pre-wrap}
 a{color:inherit}
 </style>
 </head>
@@ -26,6 +26,17 @@ a{color:inherit}
 <a href="../inventory-system/admin-center.html">返回統一管理中心</a>
 </div>
 <div id="message" class="hint">僅限核准管理帳號使用。</div>
+</section>
+<section class="panel">
+<h2 style="font-size:18px;margin:0 0 12px">新增申請季度</h2>
+<div class="controls" style="align-items:flex-end">
+  <div class="field"><label for="newQuarterName">季度名稱</label><input id="newQuarterName" placeholder="例如：116年第1季" maxlength="30"></div>
+  <div class="field"><label for="newPeriodStart">申請開放日（季度起始日）</label><input id="newPeriodStart" type="date"></div>
+  <div class="field"><label for="newDeadline">申請截止日</label><input id="newDeadline" type="date"></div>
+  <label style="display:flex;align-items:center;gap:7px;padding:10px 0"><input id="newQuarterActive" type="checkbox" checked style="width:auto"> 啟用此季度</label>
+  <button id="createQuarter" type="button" class="primary">新增季度</button>
+</div>
+<div id="quarterMessage" class="hint">設定開放日及截止日後新增。啟用中的季度會依開放日自動生效，截止日過後前台停止受理。</div>
 </section>
 <section class="panel">
 <div class="controls">
@@ -92,6 +103,40 @@ async function init(){
  await loadFilters();
  await loadRows();
 }
+async function createQuarter(){
+ const name=$("newQuarterName").value.trim();
+ const start=$("newPeriodStart").value;
+ const deadline=$("newDeadline").value;
+ const active=$("newQuarterActive").checked;
+ const msg=$("quarterMessage");
+ if(!name||!start||!deadline){msg.className="hint error";msg.textContent="請填寫季度名稱、申請開放日及申請截止日。";return;}
+ if(deadline<start){msg.className="hint error";msg.textContent="申請截止日不可早於申請開放日。";return;}
+ const button=$("createQuarter");
+ button.disabled=true;button.textContent="新增中……";
+ msg.className="hint";msg.textContent="正在新增季度……";
+ try{
+  const {data,error}=await db.from("quarters").insert({
+   quarter_name:name,
+   period_start:start,
+   deadline:deadline,
+   is_active:active
+  }).select("id,quarter_name,period_start,deadline,is_active").single();
+  if(error)throw error;
+  const option=document.createElement("option");
+  option.value=data.id;option.textContent=data.quarter_name;
+  $("quarter").insertBefore(option,$("quarter").children[1]||null);
+  $("quarter").value=String(data.id);
+  $("newQuarterName").value="";
+  msg.className="hint success";
+  msg.textContent="已新增「"+data.quarter_name+"」。開放日："+data.period_start+"；截止日："+data.deadline+"；"+(data.is_active?"已啟用":"尚未啟用")+"。";
+ }catch(e){
+  console.error(e);
+  msg.className="hint error";
+  msg.textContent="新增失敗："+e.message+"。請確認 quarters 的 authenticated INSERT 權限及管理員 RLS 政策。";
+ }finally{
+  button.disabled=false;button.textContent="新增季度";
+ }
+}
 async function loadFilters(){
  const [q,u]=await Promise.all([
   db.from("quarters").select("id,quarter_name,period_start").order("period_start",{ascending:false}),
@@ -116,7 +161,8 @@ function render(){
  if(!rows.length){$("rows").innerHTML='<tr><td colspan="9">沒有符合條件的申請紀錄。</td></tr>';return;}
  $("rows").innerHTML=rows.map(r=>'<tr><td>'+escapeHTML(r.quarters?.quarter_name||r.quarter_id)+'</td><td>'+escapeHTML(r.units?.name||r.unit_id)+'</td><td>'+escapeHTML(r.applicant_name)+'</td><td>'+Number(r.report_paper_boxes||0)+'</td><td>'+Number(r.a4_sets||0)+'</td><td>'+Number(r.a3_sets||0)+'</td><td>'+Number(r.b4_sets||0)+'</td><td>'+Number(r.b5_sets||0)+'</td><td>'+escapeHTML(r.id)+'</td></tr>').join("");
 }
-$("reload").addEventListener("click",()=>loadRows().catch(e=>showError("載入失敗："+e.message)));
+$("reload").addEventListener("click",()=>{ $("quarter").innerHTML='<option value="">全部季度</option>'; $("unit").innerHTML='<option value="">全部單位</option>'; loadFilters().then(loadRows).catch(e=>showError("載入失敗："+e.message)); });
+$("createQuarter").addEventListener("click",createQuarter);
 ["quarter","unit","search"].forEach(id=>$(id).addEventListener(id==="search"?"input":"change",render));
 init().catch(e=>{console.error(e);showError("登入或初始化失敗："+e.message);});
 })();
