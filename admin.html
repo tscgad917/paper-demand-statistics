@@ -75,7 +75,7 @@ async function init(){
  const fromCenter=ticket;
  sessionStorage.removeItem("paperAdminEntryTicket");
  if(!fromCenter&&!(isReload&&sessionStorage.getItem("paperAdminTabAuthorized")==="yes")){
-  document.body.innerHTML='<main style="max-width:680px;margin:60px auto;padding:24px;font-family:Arial,sans-serif;line-height:1.8;color:#26332c"><h2>請由統一管理中心進入</h2><p>為避免直接開啟後台連結，請先返回統一管理中心，再由管理中心選擇「紙張需求管理」。</p></main>';
+  document.body.innerHTML='<main style="max-width:680px;margin:60px auto;padding:24px;font-family:Arial,sans-serif;line-height:1.8;color:#26332c"><h2>請由統一管理中心進入</h2><p>為避免直接開啟後台連結，請先返回統一管理中心，再由管理中心選擇對應的管理功能。</p></main>';
   return;
  }
  sessionStorage.setItem("paperAdminTabAuthorized","yes");
