@@ -72,7 +72,7 @@ async function init(){
  const nav=performance.getEntriesByType("navigation")[0];
  const isReload=nav&&nav.type==="reload";
  const ticket=sessionStorage.getItem("paperAdminEntryTicket")==="from-center";
- const fromCenter=ticket||new URLSearchParams(window.location.search).get("from")==="center"||document.referrer.includes("/inventory-system/admin-center.html");
+ const fromCenter=ticket;
  sessionStorage.removeItem("paperAdminEntryTicket");
  if(!fromCenter&&!(isReload&&sessionStorage.getItem("paperAdminTabAuthorized")==="yes")){
   $("state").textContent="請由統一管理中心進入";
