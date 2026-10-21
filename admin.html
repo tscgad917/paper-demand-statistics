@@ -54,7 +54,7 @@ a{color:inherit}
 "use strict";
 const URL="https://onebxqajsiqmhfcizaxl.supabase.co";
 const KEY="sb_publishable_TihaeP-c-zcnydbqeuN7_A_Qc9eL7Zq";
-const ALLOWED="tscgad917@gmail.com";
+let ALLOWED="";
 const token=localStorage.getItem("admin_access_token");
 const refresh=localStorage.getItem("admin_refresh_token");
 const email=(localStorage.getItem("admin_email")||"").toLowerCase();
@@ -90,7 +90,7 @@ async function init(){
   const legacyToken=localStorage.getItem("admin_access_token");
   const legacyRefresh=localStorage.getItem("admin_refresh_token");
   const legacyEmail=(localStorage.getItem("admin_email")||"").toLowerCase();
-  if(!legacyToken||!legacyRefresh||legacyEmail!==ALLOWED){
+  if(!legacyToken||!legacyRefresh||!legacyEmail){
    loginAgain();
    return;
   }
@@ -103,13 +103,14 @@ async function init(){
  const user=await db.auth.getUser();
  if(user.error)throw user.error;
  const actualEmail=(user.data.user.email||"").toLowerCase();
- if(actualEmail!==ALLOWED){
-  await db.auth.signOut();
-  throw new Error("目前登入的帳號未獲授權。");
- }
+ const auth=await db.from("admin_authorizations").select("email,role,is_active").eq("email",actualEmail).eq("is_active",true).maybeSingle();
+ if(auth.error)throw auth.error;
+ if(!auth.data){await db.auth.signOut();throw new Error("目前登入的帳號未獲授權或管理權限已停用。");}
+ ALLOWED=actualEmail;
  localStorage.setItem("admin_access_token",session.access_token);
  localStorage.setItem("admin_refresh_token",session.refresh_token);
  localStorage.setItem("admin_email",actualEmail);
+ localStorage.setItem("admin_role",auth.data.role);
 
  $("state").textContent="已登入："+actualEmail;
  await loadFilters();
