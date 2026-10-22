@@ -102,6 +102,9 @@ async function init(){
 
  const user=await db.auth.getUser();
  if(user.error)throw user.error;
+ if(user.data.user.user_metadata&&user.data.user.user_metadata.must_change_password===true){
+  window.location.replace("https://tscgad917.github.io/inventory-system/force-change-password.html");return;
+ }
  const actualEmail=(user.data.user.email||"").toLowerCase();
  const auth=await db.from("admin_authorizations").select("email,role,is_active").eq("email",actualEmail).eq("is_active",true).maybeSingle();
  if(auth.error)throw auth.error;
