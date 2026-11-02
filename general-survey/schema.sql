@@ -313,12 +313,12 @@ begin
     where q.survey_id = v_survey.id and q.is_required = true
       and not exists (
         select 1
-        from jsonb_array_elements(p_answers) a
-        where a ->> 'question_id' = q.id::text
-          and a ? 'answer'
-          and (a -> 'answer') is distinct from 'null'::jsonb
-          and (a -> 'answer') <> '""'::jsonb
-          and (a -> 'answer') <> '[]'::jsonb
+        from jsonb_array_elements(p_answers) as answer_item(value)
+        where answer_item.value ->> 'question_id' = q.id::text
+          and answer_item.value ? 'answer'
+          and (answer_item.value -> 'answer') is distinct from 'null'::jsonb
+          and (answer_item.value -> 'answer') <> '""'::jsonb
+          and (answer_item.value -> 'answer') <> '[]'::jsonb
       )
   ) then
     return jsonb_build_object('ok', false, 'message', '尚有必填題目未完成。');
