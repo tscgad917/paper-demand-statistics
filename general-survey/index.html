@@ -80,6 +80,13 @@ function renderQuestion(q,value){
       if(o.image_path){const img=document.createElement("img");img.src=imageUrl(o.image_path);img.alt=o.label;img.style.cssText="width:76px;height:76px;object-fit:contain;margin-left:auto";label.appendChild(img);}
       control.appendChild(label);
     });
+    if(q.question_type==="single_choice"&&settings.allow_other){
+      const otherLabel=document.createElement("label");otherLabel.className="option";
+      const otherRadio=document.createElement("input");otherRadio.type="radio";otherRadio.name="q_"+q.id;otherRadio.value="__other__";
+      otherLabel.appendChild(otherRadio);const otherText=document.createElement("span");otherText.textContent="其他";otherLabel.appendChild(otherText);control.appendChild(otherLabel);
+      const otherInput=document.createElement("input");otherInput.type="text";otherInput.placeholder="請填寫其他需求";otherInput.dataset.otherText="true";otherInput.style.marginTop="8px";otherInput.hidden=true;control.appendChild(otherInput);
+      control.addEventListener("change",()=>{const selected=control.querySelector('input[type="radio"]:checked');otherInput.hidden=!(selected&&selected.value==="__other__");});
+    }
   }else{
     control=document.createElement("input");
     control.type=q.question_type==="number"?"number":q.question_type==="date"?"date":"text";
@@ -92,7 +99,12 @@ function renderQuestion(q,value){
   return wrap;
 }
 function getQuestionAnswer(q,el){
-  if(q.question_type==="single_choice"){const x=el.querySelector("input:checked");return x?x.value:null;}
+  if(q.question_type==="single_choice"){
+    const x=el.querySelector('input[type="radio"]:checked');
+    if(!x)return null;
+    if(x.value==="__other__"){const other=el.querySelector("[data-other-text]");return {choice:"__other__",other:other?other.value.trim():""};}
+    return x.value;
+  }
   if(q.question_type==="multiple_choice")return Array.from(el.querySelectorAll("input:checked")).map(x=>x.value);
   const c=el.querySelector("[data-answer-control]");
   if(!c||c.value==="")return null;
@@ -104,10 +116,11 @@ function validateAndCollect(){
   for(const q of surveyData.questions){
     const el=$("questions").querySelector('[data-question-id="'+q.id+'"]');
     const answer=getQuestionAnswer(q,el);
-    if(q.is_required&&(answer===null||(Array.isArray(answer)&&!answer.length))){
+    const otherIsEmpty=answer&&typeof answer==="object"&&answer.choice==="__other__"&&!answer.other;
+    if(q.is_required&&(answer===null||(Array.isArray(answer)&&!answer.length)||otherIsEmpty)){
       throw new Error("請完成必填題目：「"+q.title+"」。");
     }
-    if(answer!==null)answers.push({question_id:q.id,answer:answer});
+    if(answer!==null&&!otherIsEmpty)answers.push({question_id:q.id,answer:answer});
   }
   return answers;
 }
