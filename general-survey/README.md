@@ -1,6 +1,6 @@
-# 總務課通用問卷平台
+# 年度大量傳票需求管理系統
 
-此資料夾為年度問卷平台前後台，部署於既有 GitHub Pages 專案：
+此資料夾為年度大量傳票需求管理系統前後台，部署於既有 GitHub Pages 專案：
 
 - 填答頁：`https://tscgad917.github.io/paper-demand-statistics/general-survey/`
 - 管理頁：由「總務課統一管理中心」SYSTEM 05 進入
@@ -10,7 +10,7 @@
 
 1. 在主 Supabase 專案 SQL Editor 執行本資料夾的 `schema.sql`。
 2. 確認既有 `units`、`admin_authorizations` 資料表可由已授權管理員讀取。
-3. 由總務課統一管理中心登入，點選「通用問卷平台」。
+3. 由總務課統一管理中心登入，點選「年度大量傳票需求管理系統」。
 4. 建立年度問卷、指定填報單位、新增題目及圖片。
 5. 檢查填答網址及開放期間後，再按「發布問卷」。
 
