@@ -120,11 +120,9 @@ async function loadUnitData(){
     const {data,error}=await db.rpc("general_survey_public_info",{p_token:token,p_unit_id:Number(unitId)});
     if(error)throw error;
     if(!data||!data.ok)throw new Error(data?.message||"讀取填報資料失敗。");
-    const existing=data.submission;
-    if(existing)$("submitter").value=existing.submitter_name||"";
-    const answers={};(existing?.answers||[]).forEach(a=>answers[a.question_id]=a.answer);
-    surveyData.questions.forEach(q=>$("questions").appendChild(renderQuestion(q,answers[q.id])));
-    setMessage(existing?"本單位已有填報紀錄。您可以修改內容後再次送出，系統會以最後一次提交內容為準。":"請填寫本單位本年度預估需求。","success");
+    const alreadySubmitted=data.submission===true;
+    surveyData.questions.forEach(q=>$("questions").appendChild(renderQuestion(q,null)));
+    setMessage(alreadySubmitted?"本單位已有填報紀錄。再次提交將取代原內容，請重新填寫完整資料。":"請填寫本單位本年度預估需求。","success");
   }catch(e){setMessage(e.message||"讀取資料失敗。","error");}
 }
 async function init(){
