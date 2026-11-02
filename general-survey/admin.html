@@ -233,7 +233,7 @@ async function loadResults(){
  }).join("")||'<tr><td colspan="3">尚未指定填報單位。</td></tr>';
 }
 function formatAnswer(a){if(a==null)return "—";if(Array.isArray(a))return a.join("、");if(typeof a==="object")return JSON.stringify(a);return String(a);}
-function csvCell(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
+function csvCell(v){let s=String(v==null?"":v);if(/^[=+@\\-\\t\\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
 function exportCsv(){
  const names=new Map(units.map(u=>[u.id,u.name])),byUnit=new Map(submissions.map(s=>[s.unit_id,s]));
  const head=["年度","問卷名稱","填報單位","填報人","最後提交時間",...questions.map(q=>q.title)];
