@@ -292,7 +292,7 @@ async function load116Template(){
    const {data:q,error}=await db.from("general_survey_questions").insert({
     survey_id:selected.id,sort_order:i+1,title:x[0],description:x[1],
     question_type:"single_choice",is_required:true,
-    settings:{unit_label:x[2],allow_other:true}
+    settings:{unit_label:x[3],allow_other:true}
    }).select("id").single();
    if(error)throw error;
    const {error:oe}=await db.from("general_survey_options").insert(x[2].map((label,j)=>({question_id:q.id,sort_order:j+1,label,value:label})));
