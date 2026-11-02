@@ -52,7 +52,7 @@ button{border:0;border-radius:7px;background:#44633f;color:#fff;padding:10px 14p
   <div id="unitChecks" class="checkgrid">讀取單位中……</div>
   <div id="unitMessage" class="hint"></div>
   <hr style="border:0;border-top:1px solid #e5ebe4;margin:18px 0">
-  <h2>新增題目／品項</h2>
+  <div class="actions" style="justify-content:space-between"><h2 style="margin:0">新增題目／品項</h2><button id="load116Template" class="secondary" type="button">載入116年度大量印刷品範本</button></div>
   <div class="grid">
     <div class="field"><label for="qTitle">題目或品項名稱</label><input id="qTitle" maxlength="180" placeholder="例如：存1傳票"></div>
     <div class="field"><label for="qType">題型</label><select id="qType"><option value="number">數量填報</option><option value="text">單行文字</option><option value="textarea">多行文字</option><option value="single_choice">單選</option><option value="multiple_choice">多選</option><option value="date">日期</option></select></div>
@@ -61,7 +61,7 @@ button{border:0;border-radius:7px;background:#44633f;color:#fff;padding:10px 14p
   </div>
   <div class="field" style="margin-top:10px"><label for="qDescription">補充說明／規格</label><textarea id="qDescription" placeholder="例如：規格、尺寸、用途或填報注意事項"></textarea></div>
   <div class="field"><label for="qOptions">選項（單選／多選題使用，每行一個選項）</label><textarea id="qOptions" placeholder="選項一&#10;選項二&#10;選項三"></textarea></div>
-  <div class="actions"><label class="check"><input id="qRequired" type="checkbox"> 必填題目</label><button id="addQuestion">新增題目</button></div>
+  <div class="actions"><label class="check"><input id="qRequired" type="checkbox"> 必填題目</label><label class="check"><input id="qAllowOther" type="checkbox"> 單選題允許填寫其他內容</label><button id="addQuestion">新增題目</button></div>
   <div id="questionMessage" class="hint"></div>
   <div id="questionList" style="margin-top:12px"></div>
   <hr style="border:0;border-top:1px solid #e5ebe4;margin:18px 0">
@@ -196,9 +196,9 @@ async function addQuestion(){
    const path=selected.id+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
    const {error:up}=await db.storage.from(IMAGE_BUCKET).upload(path,file,{upsert:false,contentType:file.type});if(up)throw up;imagePath=path;
   }
-  const {data:q,error}=await db.from("general_survey_questions").insert({survey_id:selected.id,sort_order:questions.length+1,title,description:$("qDescription").value.trim(),question_type:type,is_required:$("qRequired").checked,image_path:imagePath,settings:{unit_label:$("qUnit").value.trim(),min:0,step:1}}).select("*").single();if(error)throw error;
+  const {data:q,error}=await db.from("general_survey_questions").insert({survey_id:selected.id,sort_order:questions.length+1,title,description:$("qDescription").value.trim(),question_type:type,is_required:$("qRequired").checked,image_path:imagePath,settings:{unit_label:$("qUnit").value.trim(),min:0,step:1,allow_other:$("qAllowOther").checked}}).select("*").single();if(error)throw error;
   if(optionsText.length){const {error:oe}=await db.from("general_survey_options").insert(optionsText.map((label,i)=>({question_id:q.id,sort_order:i+1,label,value:label})));if(oe)throw oe;}
-  $("qTitle").value="";$("qDescription").value="";$("qUnit").value="";$("qOptions").value="";$("qImage").value="";$("qRequired").checked=false;
+  $("qTitle").value="";$("qDescription").value="";$("qUnit").value="";$("qOptions").value="";$("qImage").value="";$("qRequired").checked=false;$("qAllowOther").checked=false;
   note("questionMessage","題目已新增。","success");await loadQuestions();
  }catch(e){note("questionMessage","新增失敗："+e.message,"error");}
  finally{$("addQuestion").disabled=false;}
@@ -210,8 +210,24 @@ async function loadQuestions(){
   const row=document.createElement("div");row.className="question-row";
   const title=document.createElement("strong");title.textContent=(q.sort_order+". "+q.title)+(q.is_required?"（必填）":"");
   const meta=document.createElement("div");meta.className="meta";meta.textContent=q.question_type+(q.settings?.unit_label?"｜單位："+q.settings.unit_label:"")+(q.description?"｜"+q.description:"")+(q.image_path?"｜已附圖片":"");
+  row.append(title,meta);
+  if(q.image_path){const img=document.createElement("img");img.className="preview";img.src=URL+"/storage/v1/object/public/"+IMAGE_BUCKET+"/"+q.image_path.split("/").map(encodeURIComponent).join("/");img.alt=q.title;row.appendChild(img);}
+  const upload=document.createElement("input");upload.type="file";upload.accept="image/jpeg,image/png,image/webp";upload.style.maxWidth="250px";
+  const uploadBtn=document.createElement("button");uploadBtn.className="secondary";uploadBtn.textContent=q.image_path?"更換圖片":"上傳圖片";uploadBtn.onclick=async()=>{
+   const file=upload.files[0];if(!file){alert("請先選擇圖片。");return;}
+   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){alert("圖片限 JPG、PNG、WEBP，且不可超過 5 MB。");return;}
+   uploadBtn.disabled=true;
+   try{
+    const path=selected.id+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const {error:up}=await db.storage.from(IMAGE_BUCKET).upload(path,file,{upsert:false,contentType:file.type});if(up)throw up;
+    const {error:ue}=await db.from("general_survey_questions").update({image_path:path}).eq("id",q.id);if(ue)throw ue;
+    if(q.image_path)await db.storage.from(IMAGE_BUCKET).remove([q.image_path]);
+    await loadQuestions();
+   }catch(e){alert("圖片上傳失敗："+e.message);}
+   finally{uploadBtn.disabled=false;}
+  };
   const del=document.createElement("button");del.className="danger";del.textContent="刪除";del.onclick=async()=>{if(!confirm("確定刪除此題目？既有填答答案也會一併刪除。"))return;const {error:e}=await db.from("general_survey_questions").delete().eq("id",q.id);if(e){alert("刪除失敗："+e.message);return;}await loadQuestions();await loadResults();};
-  row.append(title,meta,del);$("questionList").appendChild(row);
+  const controls=document.createElement("div");controls.className="actions";controls.append(upload,uploadBtn,del);row.appendChild(controls);$("questionList").appendChild(row);
  }
  if(!questions.length)$("questionList").textContent="尚未新增題目。";
 }
@@ -232,7 +248,7 @@ async function loadResults(){
   return "<tr><td>"+esc(names.get(a.unit_id)||a.units?.name||a.unit_id)+"</td><td>"+esc(s?.submitter_name||"尚未填報")+"</td><td>"+(s?esc(new Date(s.submitted_at).toLocaleString("zh-TW")):"—")+"</td>"+questions.map(q=>"<td>"+esc(formatAnswer(answers.get(q.id)))+"</td>").join("")+"</tr>";
  }).join("")||'<tr><td colspan="3">尚未指定填報單位。</td></tr>';
 }
-function formatAnswer(a){if(a==null)return "—";if(Array.isArray(a))return a.join("、");if(typeof a==="object")return JSON.stringify(a);return String(a);}
+function formatAnswer(a){if(a==null)return "—";if(Array.isArray(a))return a.join("、");if(typeof a==="object"){if(a.choice==="__other__")return "其他："+(a.other||"");return JSON.stringify(a);}return String(a);}
 function csvCell(v){let s=String(v==null?"":v);if(/^[=+@\\-\\t\\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
 function exportCsv(){
  const names=new Map(units.map(u=>[u.id,u.name])),byUnit=new Map(submissions.map(s=>[s.unit_id,s]));
@@ -249,7 +265,52 @@ async function togglePublish(){
  const {data,error}=await db.from("general_surveys").update({is_published:next,updated_at:new Date().toISOString()}).eq("id",selected.id).select("*").single();
  if(error){alert("更新失敗："+error.message);return;}selected=data;await loadSurveys();await selectSurvey(data.id);
 }
+
+async function load116Template(){
+ if(!selected||Number(selected.target_year)!==116){alert("此範本僅供116年度問卷使用。");return;}
+ if(questions.length){alert("目前問卷已有題目，為避免重複新增，請先確認題目清單。");return;}
+ const items=[
+  ["存1（1011）：收入傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天40次存款。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存2（1021）：收入傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天40次取款。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存4：轉帳收入傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天40次轉帳。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存5：轉帳支出傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天40次轉帳。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存10：支出傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天使用40張。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存11：收入傳票","此傳票一箱為10,000張。依116年正常工作天數244天，1箱傳票可供一營業單位每天使用40張。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["存91：收入傳票","此傳票一箱為4,000份。依116年正常工作天數244天，1箱傳票可供一營業單位每天匯款16筆。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["查18：長對帳單","此牛皮對帳單一包為1,500張。依116年正常工作天數244天，1包可供一營業單位每天核對6位客戶。",["0包","1包","2包","3包"],"包"],
+  ["會1（8070）：科目試算／結帳表","此表一箱為5,000張。依116年正常工作天數244天，1箱可供一營業單位每天試算／結帳20次。",["0箱","1箱","2箱","3箱"],"箱"],
+  ["#044（8086）：科目日結單","此傳票一箱為10,000張。依116年正常工作天數244天，1箱可供一營業單位每天40種會計科目。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["#064（8440）：櫃員現金收受表","此傳票一箱為5,300張。依116年正常工作天數244天，1箱可供一營業單位每天21次現金收受。",["0箱","1箱","2箱"],"箱"],
+  ["#099：代收費用收執","此傳票一箱為20,000張。依116年正常工作天數244天，1箱可供一營業單位每天代收費用81次。",["0箱","0.5箱","1箱","2箱","3箱"],"箱"],
+  ["傳票厚紙板","此厚紙板一包為1,000張。原始表單說明為依115年工作天數，1包可供一營業單位每天使用4張；請確認是否應修正為116年工作天數。",["0包","1包","2包"],"包"]
+ ];
+ if(!confirm("將新增13項常用傳票／印刷品及1題其他需求，全部設為必填；每項均可再上傳圖片。是否繼續？"))return;
+ const btn=$("load116Template");btn.disabled=true;
+ try{
+  for(let i=0;i<items.length;i++){
+   const x=items[i];
+   const {data:q,error}=await db.from("general_survey_questions").insert({
+    survey_id:selected.id,sort_order:i+1,title:x[0],description:x[1],
+    question_type:"single_choice",is_required:true,
+    settings:{unit_label:x[2],allow_other:true}
+   }).select("id").single();
+   if(error)throw error;
+   const {error:oe}=await db.from("general_survey_options").insert(x[2].map((label,j)=>({question_id:q.id,sort_order:j+1,label,value:label})));
+   if(oe)throw oe;
+  }
+  const {error:te}=await db.from("general_survey_questions").insert({
+   survey_id:selected.id,sort_order:14,title:"其他傳票大量需求",
+   description:"如果有其他常用傳票未在上面出現，請填寫需要的編號、名稱及箱數。總務課將視各單位彙整結果，斟酌是否統一購買。",
+   question_type:"textarea",is_required:false,settings:{placeholder:"請填寫傳票編號、名稱及預估箱數"}
+  });
+  if(te)throw te;
+  await loadQuestions();note("questionMessage","已載入116年度範本，共14題。請檢查傳票厚紙板工作天數說明，並逐項上傳品項圖片。","success");
+ }catch(e){note("questionMessage","範本載入失敗："+e.message+"。若已新增部分題目，請檢查題目清單後再處理。","error");}
+ finally{btn.disabled=false;}
+}
+
 $("createSurvey").addEventListener("click",createSurvey);
+$("load116Template").addEventListener("click",load116Template);
 $("copySurvey").addEventListener("click",copySurvey);
 $("reload").addEventListener("click",()=>loadSurveys().catch(e=>note("notice",e.message,"error")));
 $("selectAllUnits").addEventListener("click",()=> $("unitChecks").querySelectorAll("input").forEach(x=>x.checked=true));
