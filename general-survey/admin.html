@@ -256,7 +256,7 @@ function exportCsv(){
  const rows=[head];
  assignments.forEach(a=>{const s=byUnit.get(a.unit_id),ans=new Map((s?.general_survey_answers||[]).map(x=>[x.question_id,x.answer]));rows.push([selected.target_year,selected.title,names.get(a.unit_id)||a.unit_id,s?.submitter_name||"",s?.submitted_at||"",...questions.map(q=>formatAnswer(ans.get(q.id)))]);});
  const csv="\uFEFF"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
- const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=selected.target_year+"年度問卷填報結果.csv";a.click();URL.revokeObjectURL(url);
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=window.URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=selected.target_year+"年度問卷填報結果.csv";a.click();window.URL.revokeObjectURL(url);
 }
 async function togglePublish(){
  const next=!selected.is_published;
