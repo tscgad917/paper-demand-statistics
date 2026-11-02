@@ -293,7 +293,7 @@ begin
     return jsonb_build_object('ok', false, 'message', '請填寫填報人姓名。');
   end if;
 
-  if jsonb_typeof(p_answers) <> 'array' then
+  if coalesce(jsonb_typeof(p_answers), '') <> 'array' then
     return jsonb_build_object('ok', false, 'message', '填報資料格式不正確。');
   end if;
 
