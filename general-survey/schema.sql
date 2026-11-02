@@ -319,6 +319,11 @@ begin
           and (answer_item.value -> 'answer') is distinct from 'null'::jsonb
           and (answer_item.value -> 'answer') <> '""'::jsonb
           and (answer_item.value -> 'answer') <> '[]'::jsonb
+          and not (
+            jsonb_typeof(answer_item.value -> 'answer') = 'object'
+            and answer_item.value -> 'answer' ->> 'choice' = '__other__'
+            and nullif(trim(answer_item.value -> 'answer' ->> 'other'), '') is null
+          )
       )
   ) then
     return jsonb_build_object('ok', false, 'message', '尚有必填題目未完成。');
