@@ -226,16 +226,8 @@ begin
       from public.general_survey_questions q
       where q.survey_id = v_survey.id
     ), '[]'::jsonb),
-    'submission', case when p_unit_id is null then null else (
-      select jsonb_build_object(
-        'submitter_name', s.submitter_name,
-        'submitted_at', s.submitted_at,
-        'answers', coalesce((
-          select jsonb_agg(jsonb_build_object('question_id', a.question_id, 'answer', a.answer))
-          from public.general_survey_answers a
-          where a.submission_id = s.id
-        ), '[]'::jsonb)
-      )
+    'submission', case when p_unit_id is null then null else exists (
+      select 1
       from public.general_survey_submissions s
       where s.survey_id = v_survey.id and s.unit_id = p_unit_id
     ) end
